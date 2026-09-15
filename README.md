@@ -19,4 +19,6 @@ This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 - LuckPerms' default group must be configured so that 'economyshopgui.shop' and 'economyshopgui.sellgui.all' permissions are set to false
 - Another thing to mention is that EconomyShopGUI requires a economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
 
+For support or questions, join my discord server: https://discord.gg/8yrbGUCFFD
+
 Licensed under the Apache License 2.0
