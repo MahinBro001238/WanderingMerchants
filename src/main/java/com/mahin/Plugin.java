@@ -692,7 +692,7 @@ public class Plugin extends JavaPlugin implements Listener {
                 for (NPC npc : CitizensAPI.getNPCRegistry()) {
                     MetadataStore NPCData = npc.data();
                     String NPCVariant = NPCData.get("variant");
-                    if (NPCVariant.equals("stray") || NPCVariant.equals("stray_moving")) {
+                    if (NPCVariant != null && (NPCVariant.equals("stray") || NPCVariant.equals("stray_moving"))) {
                         if (System.currentTimeMillis() - (long) NPCData.get("creation_time") >= 600000) {
                             npc.destroy();
                         }
@@ -700,6 +700,12 @@ public class Plugin extends JavaPlugin implements Listener {
                 }
             }
         }, 2400L, 2400L);
+        for (NPC npc : CitizensAPI.getNPCRegistry()) {
+            MetadataStore NPCData = npc.data();
+            if (NPCData.get("variant") != null) {
+                NPCData.remove("in_interaction");
+            }
+        }
         this.console = Bukkit.getConsoleSender();
         Bukkit.getPluginManager().registerEvents(this, this);
         getLogger().info("Wandering Merchants has been enabled");
@@ -707,62 +713,64 @@ public class Plugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onNPCRightClick(NPCRightClickEvent event) {
         NPC npc = event.getNPC();
-        String NPCName = npc.getName();
-        for (int i=0; i<merchants.size(); i++) {
-            Merchant MerchantData = merchants.get(i);
-            if (NPCName.equals(MerchantData.name)) {
-                Inventory GUI = Bukkit.createInventory(new InventoryOwner(NPCName + " " + npc.getId()), 45, Component.text(NPCName));
-                Player player = event.getClicker();
-                MetadataStore NPCData = npc.data();
-                String NPCVariant = NPCData.get("variant");
-                if (NPCVariant.equals("stray")) {
-                    if (NPCData.get("in_interaction") == null) {
-                        NPCData.setPersistent("in_interaction", true);
-                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("linear");
-                        NPCData.setPersistent(NPC.Metadata.GLOWING, false);
+        MetadataStore NPCData = npc.data();
+        String NPCVariant = NPCData.get("variant");
+        if (NPCVariant != null) {
+            String NPCName = npc.getName();
+            for (int i=0; i<merchants.size(); i++) {
+                Merchant MerchantData = merchants.get(i);
+                if (NPCName.equals(MerchantData.name)) {
+                    Inventory GUI = Bukkit.createInventory(new InventoryOwner(NPCName + " " + npc.getId()), 45, Component.text(NPCName));
+                    Player player = event.getClicker();
+                    if (NPCVariant.equals("stray")) {
+                        if (NPCData.get("in_interaction") == null) {
+                            NPCData.setPersistent("in_interaction", true);
+                            npc.getOrAddTrait(Waypoints.class).setWaypointProvider("linear");
+                            NPCData.setPersistent(NPC.Metadata.GLOWING, false);
+                            GUI.setItem(20, CreateItem(Material.PAPER, "Talk to " + NPCName, List.of(), ""));
+                            GUI.setItem(22, CreateItem(Material.ENCHANTED_BOOK, MerchantData.ItemName, List.of("Left click to give " + MerchantData.ItemName + " to " + NPCName, "Right click to view " + NPCName + "'s " + MerchantData.ItemName + " recipe"), ""));
+                            GUI.setItem(24, CreateItem(Material.LIME_CONCRETE, "Follow", List.of("Make " + NPCName + " follow you"), ""));
+                        }
+                        else {
+                            player.sendMessage(MerchantData.name + ": Hold on, I am talking to someone else right now");
+                            break;
+                        }
+                    }
+                    else if (NPCVariant.equals("stray_moving")) {
                         GUI.setItem(20, CreateItem(Material.PAPER, "Talk to " + NPCName, List.of(), ""));
                         GUI.setItem(22, CreateItem(Material.ENCHANTED_BOOK, MerchantData.ItemName, List.of("Left click to give " + MerchantData.ItemName + " to " + NPCName, "Right click to view " + NPCName + "'s " + MerchantData.ItemName + " recipe"), ""));
+                        String following = npc.getOrAddTrait(FollowTrait.class).getFollowing().getName();
+                        ItemStack Item3;
+                        if (player.getName().equals(following)) {
+                            Item3 = CreateItem(Material.RED_CONCRETE, "Unfollow", List.of("Make " + NPCName + " stop following you"), "");
+                        }
+                        else {
+                            Item3 = CreateItem(Material.WHITE_CONCRETE, "Following " + following, List.of(NPCName + " is currently following " + following), "");
+                        }
+                        GUI.setItem(24, Item3);
+                    }
+                    else if (NPCVariant.equals("shop")) {
+                        GUI.setItem(20, MerchantData.ShopIcon);
+                        GUI.setItem(22, MerchantData.SellGUIIcon);
                         GUI.setItem(24, CreateItem(Material.LIME_CONCRETE, "Follow", List.of("Make " + NPCName + " follow you"), ""));
                     }
                     else {
-                        player.sendMessage(MerchantData.name + ": Hold on, I am talking to someone else right now");
-                        break;
+                        GUI.setItem(20, MerchantData.ShopIcon);
+                        GUI.setItem(22, MerchantData.SellGUIIcon);
+                        String following = npc.getOrAddTrait(FollowTrait.class).getFollowing().getName();
+                        ItemStack Item3;
+                        if (player.getName().equals(following)) {
+                            Item3 = CreateItem(Material.RED_CONCRETE, "Unfollow", List.of("Make " + NPCName + " stop following you"), "");
+                        }
+                        else {
+                            Item3 = CreateItem(Material.WHITE_CONCRETE, "Following " + following, List.of(NPCName + " is currently following " + following), "");
+                        }
+                        GUI.setItem(24, Item3);
                     }
+                    GUI.setItem(36, CreateItem(Material.REDSTONE_BLOCK, "Health: " + String.format("%.1f", ((LivingEntity) npc.getEntity()).getHealth()) + "/20.0", List.of(), ""));
+                    player.openInventory(GUI);
+                    break;
                 }
-                else if (NPCVariant.equals("stray_moving")) {
-                    GUI.setItem(20, CreateItem(Material.PAPER, "Talk to " + NPCName, List.of(), ""));
-                    GUI.setItem(22, CreateItem(Material.ENCHANTED_BOOK, MerchantData.ItemName, List.of("Left click to give " + MerchantData.ItemName + " to " + NPCName, "Right click to view " + NPCName + "'s " + MerchantData.ItemName + " recipe"), ""));
-                    String following = npc.getOrAddTrait(FollowTrait.class).getFollowing().getName();
-                    ItemStack Item3;
-                    if (player.getName().equals(following)) {
-                        Item3 = CreateItem(Material.RED_CONCRETE, "Unfollow", List.of("Make " + NPCName + " stop following you"), "");
-                    }
-                    else {
-                        Item3 = CreateItem(Material.WHITE_CONCRETE, "Following " + following, List.of(NPCName + " is currently following " + following), "");
-                    }
-                    GUI.setItem(24, Item3);
-                }
-                else if (NPCVariant.equals("shop")) {
-                    GUI.setItem(20, MerchantData.ShopIcon);
-                    GUI.setItem(22, MerchantData.SellGUIIcon);
-                    GUI.setItem(24, CreateItem(Material.LIME_CONCRETE, "Follow", List.of("Make " + NPCName + " follow you"), ""));
-                }
-                else {
-                    GUI.setItem(20, MerchantData.ShopIcon);
-                    GUI.setItem(22, MerchantData.SellGUIIcon);
-                    String following = npc.getOrAddTrait(FollowTrait.class).getFollowing().getName();
-                    ItemStack Item3;
-                    if (player.getName().equals(following)) {
-                        Item3 = CreateItem(Material.RED_CONCRETE, "Unfollow", List.of("Make " + NPCName + " stop following you"), "");
-                    }
-                    else {
-                        Item3 = CreateItem(Material.WHITE_CONCRETE, "Following " + following, List.of(NPCName + " is currently following " + following), "");
-                    }
-                    GUI.setItem(24, Item3);
-                }
-                GUI.setItem(36, CreateItem(Material.REDSTONE_BLOCK, "Health: " + String.format("%.1f", ((LivingEntity) npc.getEntity()).getHealth()) + "/20.0", List.of(), ""));
-                player.openInventory(GUI);
-                break;
             }
         }
     }
@@ -905,7 +913,7 @@ public class Plugin extends JavaPlugin implements Listener {
                 }
             }
         }
-        else if (owner.getClass().getSimpleName().equals("SellGUI")) {
+        else if (owner != null && owner.getClass().getSimpleName().equals("SellGUI")) {
             Bukkit.getScheduler().runTaskLater(this, new Runnable() {
                 @Override
                 public void run() {
@@ -923,7 +931,10 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @EventHandler
     public void onNPCDeath(NPCDeathEvent event) {
-        event.getNPC().destroy();
+    NPC npc = event.getNPC();
+        if (npc.data().get("variant") != null) {
+            npc.destroy();
+        }
     }
     @Override
     public void onDisable() {
