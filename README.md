@@ -14,10 +14,10 @@ This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 - EconomyShopGUI: https://modrinth.com/plugin/economyshopgui
 - LuckPerms: https://modrinth.com/plugin/luckperms
 
-- In order to work correctly, this plugin assumes that LuckPerms' default group has '*' set to false
-- Make sure to set 'direct-shop-command-console' to 'true' in the EconomyShopGUI plugin's config
-- LuckPerms' default group must be configured so that 'economyshopgui.shop' and 'economyshopgui.sellgui.all' permissions are set to false
-- Another thing to mention is that EconomyShopGUI requires a economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
+In order to work correctly, this plugin assumes that LuckPerms' default group has '*' set to false
+Make sure to set 'direct-shop-command-console' to 'true' in the EconomyShopGUI plugin's config
+LuckPerms' default group must be configured so that 'economyshopgui.shop' and 'economyshopgui.sellgui.all' permissions are set to false
+Another thing to mention is that EconomyShopGUI requires a economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
 
 For support or questions, join my discord server: https://discord.gg/8yrbGUCFFD
 
