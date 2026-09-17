@@ -10,7 +10,7 @@ This plugin was built for Minecraft 26.2 running on PaperMC. It may or may not w
 
 This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 
-- Citizens: https://modrinth.com/plugin/citizens
+- Citizens: https://ci.citizensnpcs.co/job/citizens2/
 - EconomyShopGUI: https://modrinth.com/plugin/economyshopgui
 - LuckPerms: https://modrinth.com/plugin/luckperms
 
