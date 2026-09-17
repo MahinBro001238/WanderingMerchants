@@ -11,7 +11,7 @@ This plugin was built for Minecraft 26.2 running on PaperMC. It may or may not w
 This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 
 - Citizens: https://ci.citizensnpcs.co/job/citizens2/
-- EconomyShopGUI: https://modrinth.com/plugin/economyshopgui
+- EconomyShopGUI: https://www.spigotmc.org/resources/economyshopgui.69927/
 - LuckPerms: https://modrinth.com/plugin/luckperms
 
 In order to work correctly, this plugin assumes that LuckPerms' default group has '*' set to false
