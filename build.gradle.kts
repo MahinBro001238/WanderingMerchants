@@ -14,6 +14,6 @@ repositories {
     maven("https://repo.alessiodp.com/releases/")
 }
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    compileOnly("net.citizensnpcs:citizens-main:2.0.43-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
+    compileOnly("net.citizensnpcs:citizens-main:2.0.44-SNAPSHOT")
 }
