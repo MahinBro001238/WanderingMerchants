@@ -1,0 +1,24 @@
+# =============================================
+# Wandering Merchants
+# Made by MahinBro001238
+# Licensed under the Apache License 2.0
+# For support or questions, join my discord server:
+# https://discord.gg/8yrbGUCFFD
+# =============================================
+
+# The message sent to the player when a merchant spawns nearby
+# Supports MiniMessage formatting
+merchant_spawn_text: "<gray><italic>Hm... something feels different. Did someone just arrive nearby?</italic></gray>"
+
+# Time between merchant spawns, in seconds
+# By default, a merchant can spawn once every hour
+merchant_spawn_frequency: 3600
+
+# Time before a merchant despawns if it has not been turned into a shopkeeper, in seconds
+# By default, merchants despawn after 10 minutes
+merchant_despawn_time: 600
+
+# How often the plugin checks for merchants that should despawn, in seconds
+# Warning: If this value is too high, merchants may stay longer than the specified despawn time
+# This should be less than the despawn time and divide evenly into it
+merchant_despawn_check_frequency: 120
