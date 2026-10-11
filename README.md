@@ -4,9 +4,7 @@ Merchants are NPCs that spawn randomly around the world rather than being placed
 
 Under the hood, the NPCs themselves are created and controlled through Citizens, which handles their appearance, movement, and persistence. The actual buying and selling is powered by EconomyShopGUI, meaning the plugin hooks into an established shop system rather than reinventing one, and all transactions respect your configured shop prices. Because the merchants spawn on a timer and manage their own lifecycle, they come and go naturally without needing an admin to place or remove them
 
-This plugin has no config file. Any custom behaviour requires modifying the source code directly and rebuilding the jar from scratch
-
-This plugin was built for Minecraft 26.2 running on PaperMC. It may or may not work on older or newer versions of Minecraft or other server software
+This plugin was built for Minecraft 26.3 running on PaperMC. It may or may not work on older versions of Minecraft or other server software
 
 This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 
