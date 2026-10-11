@@ -8,11 +8,13 @@ import net.citizensnpcs.trait.FollowTrait;
 import net.citizensnpcs.trait.LookClose;
 import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import net.citizensnpcs.trait.TargetableTrait;
 import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -252,16 +254,15 @@ public class Plugin extends JavaPlugin implements Listener {
         MarcusItemCraftingRecipe.setIngredient('A', Material.AMETHYST_SHARD);
         Bukkit.addRecipe(MarcusItemCraftingRecipe);
         Inventory EdmundItemCraftingRecipeGUI = Bukkit.createInventory(null, 45, Component.text("Edmund").color(NamedTextColor.BLACK));
-        Item1 = CreateItem(Material.WHEAT, "", List.of(), "");
-        Item2 = CreateItem(Material.WHEAT_SEEDS, "", List.of(), "");
-        Item3 = CreateItem(Material.CARROT, "", List.of(), "");
-        Item4 = CreateItem(Material.BONE_MEAL, "", List.of(), "");
+        Item1 = CreateItem(Material.WHEAT_SEEDS, "", List.of(), "");
+        Item2 = CreateItem(Material.PUMPKIN_SEEDS, "", List.of(), "");
+        Item3 = CreateItem(Material.BUNDLE, "", List.of(), "");
         EdmundItemCraftingRecipeGUI.setItem(12, Item1);
         EdmundItemCraftingRecipeGUI.setItem(13, Item2);
         EdmundItemCraftingRecipeGUI.setItem(14, Item1);
-        EdmundItemCraftingRecipeGUI.setItem(21, Item3);
-        EdmundItemCraftingRecipeGUI.setItem(22, Item4);
-        EdmundItemCraftingRecipeGUI.setItem(23, Item3);
+        EdmundItemCraftingRecipeGUI.setItem(21, Item2);
+        EdmundItemCraftingRecipeGUI.setItem(22, Item3);
+        EdmundItemCraftingRecipeGUI.setItem(23, Item2);
         EdmundItemCraftingRecipeGUI.setItem(30, Item1);
         EdmundItemCraftingRecipeGUI.setItem(31, Item2);
         EdmundItemCraftingRecipeGUI.setItem(32, Item1);
@@ -276,15 +277,14 @@ public class Plugin extends JavaPlugin implements Listener {
             CreateItem(Material.CARROT, "Sell items", List.of("Sell crops in one go"), "")
         ));
         ShapedRecipe EdmundItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, "edmunds_seed_pouch"), CreateItem(Material.ENCHANTED_BOOK, "Edmund's Seed Pouch", List.of("Hand this to Edmund"), "edmunds_seed_pouch"));
-        EdmundItemCraftingRecipe.shape("WSW", "SBS", "WSW");
-        EdmundItemCraftingRecipe.setIngredient('W', Material.WHEAT);
-        EdmundItemCraftingRecipe.setIngredient('S', Material.WHEAT_SEEDS);
+        EdmundItemCraftingRecipe.shape("WPW", "PBP", "WPW");
+        EdmundItemCraftingRecipe.setIngredient('W', Material.WHEAT_SEEDS);
+        EdmundItemCraftingRecipe.setIngredient('P', Material.PUMPKIN_SEEDS);
         EdmundItemCraftingRecipe.setIngredient('B', Material.BUNDLE);
         Bukkit.addRecipe(EdmundItemCraftingRecipe);
         Inventory GordanItemCraftingRecipeGUI = Bukkit.createInventory(null, 45, Component.text("Gordan").color(NamedTextColor.BLACK));
         Item1 = CreateItem(Material.STICK, "", List.of(), "");
         Item2 = CreateItem(Material.IRON_INGOT, "", List.of(), "");
-        Item3 = CreateItem(Material.BARRIER, "", List.of(), "");
         GordanItemCraftingRecipeGUI.setItem(12, Item1);
         GordanItemCraftingRecipeGUI.setItem(13, Item2);
         GordanItemCraftingRecipeGUI.setItem(14, Item2);
@@ -292,8 +292,6 @@ public class Plugin extends JavaPlugin implements Listener {
         GordanItemCraftingRecipeGUI.setItem(22, Item2);
         GordanItemCraftingRecipeGUI.setItem(23, Item2);
         GordanItemCraftingRecipeGUI.setItem(30, Item1);
-        GordanItemCraftingRecipeGUI.setItem(31, Item3);
-        GordanItemCraftingRecipeGUI.setItem(32, Item3);
         merchants.add(new Merchant("Gordan",
             "food",
             "ewogICJ0aW1lc3RhbXAiIDogMTYxNzMwMDU2MzQ4OCwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjZjQ3OTQ1OGIxZjFmNDNlMzQxMzI3MDllNmZjNjM5Yzg5NzhiMzNmOWViMmU0YTg2M2E1MzJiNTViMTYxZjIiCiAgICB9CiAgfQp9",
@@ -449,7 +447,7 @@ public class Plugin extends JavaPlugin implements Listener {
             CreateItem(Material.ENCHANTED_BOOK, "Enchanted books", List.of("Buy enchanted books"), ""),
             CreateItem(Material.ENCHANTED_BOOK, "Sell items", List.of("Sell enchanting related items in one go"), "")
         ));
-        ShapedRecipe SylphieItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, "sylphies_grimoire"), CreateItem(Material.ENCHANTED_BOOK, "Sylphies' Grimoire", List.of("Hand this to Sylphie"), "sylphies_grimoire"));
+        ShapedRecipe SylphieItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, "sylphies_grimoire"), CreateItem(Material.ENCHANTED_BOOK, "Sylphie's Grimoire", List.of("Hand this to Sylphie"), "sylphies_grimoire"));
         SylphieItemCraftingRecipe.shape("GBG", "BGB", "GBG");
         SylphieItemCraftingRecipe.setIngredient('G', Material.GLOWSTONE_DUST);
         SylphieItemCraftingRecipe.setIngredient('B', Material.BOOK);
@@ -657,6 +655,12 @@ public class Plugin extends JavaPlugin implements Listener {
         RufusItemCraftingRecipe.setIngredient('S', Material.OAK_SLAB);
         RufusItemCraftingRecipe.setIngredient('B', Material.BARREL);
         Bukkit.addRecipe(RufusItemCraftingRecipe);
+        saveDefaultConfig();
+        FileConfiguration config = getConfig();
+        Component MerchantMessage = MiniMessage.miniMessage().deserialize(config.getString("merchant_spawn_text"));
+        long SpawnFrequency = config.getInt("merchant_spawn_frequency") * 20L;
+        long DespawnTime = config.getInt("merchant_despawn_time") * 1000L;
+        long DespawnCheckFrequency = config.getInt("merchant_despawn_check_frequency") * 20L;
         Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
             @Override
             public void run() {
@@ -681,11 +685,11 @@ public class Plugin extends JavaPlugin implements Listener {
                         int NewX = RandomPlayer.getLocation().blockX() + random.nextInt(201) - 100;
                         int NewZ = RandomPlayer.getLocation().blockZ() + random.nextInt(201) - 100;
                         npc.spawn(new Location(world, NewX + 0.5, world.getHighestBlockYAt(NewX, NewZ) + 1, NewZ + 0.5));
-                        RandomPlayer.sendMessage(Component.text("Hm... something feels different. Did someone just arrive nearby?").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, true));
+                        RandomPlayer.sendMessage(MerchantMessage);
                     }
                 }
             }
-        }, 72000L, 72000L);
+        }, SpawnFrequency, SpawnFrequency);
         Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
             @Override
             public void run() {
@@ -693,13 +697,13 @@ public class Plugin extends JavaPlugin implements Listener {
                     MetadataStore NPCData = npc.data();
                     String NPCVariant = NPCData.get("variant");
                     if (NPCVariant != null && (NPCVariant.equals("stray") || NPCVariant.equals("stray_moving"))) {
-                        if (System.currentTimeMillis() - (long) NPCData.get("creation_time") >= 600000) {
+                        if (System.currentTimeMillis() - (long) NPCData.get("creation_time") >= DespawnTime) {
                             npc.destroy();
                         }
                     }
                 }
             }
-        }, 2400L, 2400L);
+        }, DespawnCheckFrequency, DespawnCheckFrequency);
         for (NPC npc : CitizensAPI.getNPCRegistry()) {
             MetadataStore NPCData = npc.data();
             if (NPCData.get("variant") != null) {
