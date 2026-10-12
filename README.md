@@ -1,3 +1,5 @@
+![WanderingMerchants](https://raw.githubusercontent.com/MahinBro001238/WanderingMerchants/main/Logo%20Banner.png)
+
 Wandering Merchants brings RPG-style travelling traders to your server. Instead of every shop being in a fixed location, these merchants roam the world on their own, and stumbling across one out in the wild feels like a small event. It makes exploration more rewarding and gives your world the feel of a living, populated place where trade happens out in the world rather than being confined to a single market area
 
 Merchants are NPCs that spawn randomly around the world rather than being placed by an admin. When a player finds one, they can interact with it to browse and buy items. Because the merchants are wired into your server's economy, buying from them uses your existing in-game currency, so the prices and money all flow through the same system your players already use for everything else. This turns exploring into a way to find deals and rare goods rather than just fighting mobs and gathering resources
