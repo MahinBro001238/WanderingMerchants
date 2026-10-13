@@ -1,10 +1,14 @@
 # =============================================
-# Wandering Merchants
+# Wandering Merchants v1.1.3
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
 # https://discord.gg/8yrbGUCFFD
 # =============================================
+
+#DO NOT CHANGE THIS VALUE
+#CHANGING THIS VALUE MAY LEAD TO UNEXPECTED BEHAVIOURS SUCH AS THE PLUGIN CRASHING
+config_version: 1
 
 # The message sent to the player when a merchant spawns nearby
 # Supports MiniMessage formatting
