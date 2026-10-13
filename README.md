@@ -6,7 +6,9 @@ Merchants are NPCs that spawn randomly around the world rather than being placed
 
 Under the hood, the NPCs themselves are created and controlled through Citizens, which handles their appearance, movement, and persistence. The actual buying and selling is powered by EconomyShopGUI, meaning the plugin hooks into an established shop system rather than reinventing one, and all transactions respect your configured shop prices. Because the merchants spawn on a timer and manage their own lifecycle, they come and go naturally without needing an admin to place or remove them
 
-The latest version plugin was built for Minecraft 26.3 running on PaperMC. It may or may not work on other server software. Versions of this plugin that support older Minecraft versions are available, however when new features are added, they will only be added to the latest version of Minecraft. This may change if the plugin gets more attention
+The latest version plugin was built for Minecraft 26.3 running on PaperMC. It may or may not work on other server software. It should work on forks of PaperMC such as Purpur and Pufferfish, though it has not been tested on them. Versions of this plugin that support older Minecraft versions are available, however when new features are added, they will only be added to the latest version of Minecraft. This may change if the plugin gets more attention
+
+So far the config file only allows little customization however full merchant customization and the ability to add new custom merchants through the config file is planned for a future update
 
 This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 
@@ -17,7 +19,7 @@ This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 In order to work correctly, this plugin assumes that LuckPerms' default group has '*' set to false
 Make sure to set 'direct-shop-command-console' to 'true' in the EconomyShopGUI plugin's config
 LuckPerms' default group must be configured so that 'economyshopgui.shop' and 'economyshopgui.sellgui.all' permissions are set to false
-Another thing to mention is that EconomyShopGUI requires a economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
+Another thing to mention is that EconomyShopGUI requires an economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
 
 For support or questions, join my discord server: https://discord.gg/8yrbGUCFFD
 
