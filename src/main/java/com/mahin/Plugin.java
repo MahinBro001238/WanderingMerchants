@@ -6,6 +6,7 @@ import net.citizensnpcs.api.npc.MetadataStore;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.trait.FollowTrait;
 import net.citizensnpcs.trait.LookClose;
+import java.util.Scanner;
 import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -13,7 +14,6 @@ import net.citizensnpcs.trait.TargetableTrait;
 import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,8 +34,12 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.LivingEntity;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 public class Plugin extends JavaPlugin implements Listener {
@@ -46,17 +50,17 @@ public class Plugin extends JavaPlugin implements Listener {
         public String SkinSignature;
         public String dialogue;
         public String ItemName;
-        public Inventory ItemCraftingRecipieGUI;
+        public Inventory ItemCraftingRecipeGUI;
         public ItemStack ShopIcon;
         public ItemStack SellGUIIcon;
-        public Merchant(String name, String shop, String SkinTexture, String SkinSignature, String dialogue, String ItemName, Inventory ItemCraftingRecipieGUI, ItemStack ShopIcon, ItemStack SellGUIIcon) {
+        public Merchant(String name, String shop, String SkinTexture, String SkinSignature, String dialogue, String ItemName, Inventory ItemCraftingRecipeGUI, ItemStack ShopIcon, ItemStack SellGUIIcon) {
             this.name = name;
             this.shop = shop;
             this.SkinTexture = SkinTexture;
             this.SkinSignature = SkinSignature;
             this.dialogue = dialogue;
             this.ItemName = ItemName;
-            this.ItemCraftingRecipieGUI = ItemCraftingRecipieGUI;
+            this.ItemCraftingRecipeGUI = ItemCraftingRecipeGUI;
             this.ShopIcon = ShopIcon;
             this.SellGUIIcon = SellGUIIcon;
         }
@@ -657,6 +661,22 @@ public class Plugin extends JavaPlugin implements Listener {
         Bukkit.addRecipe(RufusItemCraftingRecipe);
         saveDefaultConfig();
         FileConfiguration config = getConfig();
+        if (!config.isSet("config_version")) {
+            Map<String, Object> OldConfigValues = new HashMap<>();
+            for (String key : config.getKeys(false)) {
+                OldConfigValues.put(key, config.get(key));
+            }
+            saveResource("config.yml", true);
+            reloadConfig();
+            config = getConfig();
+            for (String key : config.getKeys(false)) {
+                if (OldConfigValues.containsKey(key)) {
+                    config.set(key, OldConfigValues.get(key));
+                }
+            }
+            saveConfig();
+            getLogger().info("Updated old config file");
+        }
         Component MerchantMessage = MiniMessage.miniMessage().deserialize(config.getString("merchant_spawn_text"));
         long SpawnFrequency = config.getInt("merchant_spawn_frequency") * 20L;
         long DespawnTime = config.getInt("merchant_despawn_time") * 1000L;
@@ -711,8 +731,39 @@ public class Plugin extends JavaPlugin implements Listener {
             }
         }
         this.console = Bukkit.getConsoleSender();
+        new Metrics(this, 34647);
         Bukkit.getPluginManager().registerEvents(this, this);
-        getLogger().info("Wandering Merchants has been enabled");
+        Bukkit.getScheduler().runTaskAsynchronously(this, new Runnable() {
+            @Override
+            public void run() {
+                String FifthLine;
+                try {
+                    HttpURLConnection GithubRequest = (HttpURLConnection) new URI("https://api.github.com/repos/MahinBro001238/WanderingMerchants/releases/latest").toURL().openConnection();
+                    GithubRequest.setConnectTimeout(5000);
+                    Scanner scanner = new Scanner(GithubRequest.getInputStream());
+                    String VersionString = scanner.useDelimiter("\\A").next().split("\"tag_name\":\"v")[1].split("\"")[0];
+                    int VersionInteger = Integer.parseInt(VersionString.replace(".", ""));
+                    scanner.close();
+                    if (VersionInteger > 113) {
+                        FifthLine = "There is a new update: v" + VersionString;
+                    }
+                    else {
+                        FifthLine = "You are using the latest version";
+                    }
+                }
+                catch (Exception e) {
+                    FifthLine = "Unable to check for updates";
+                }
+                getLogger().info("=============================================");
+                getLogger().info("Wandering Merchants v1.1.3");
+                getLogger().info("Made by MahinBro001238");
+                getLogger().info("Licensed under the Apache License 2.0");
+                getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
+                getLogger().info(FifthLine);
+                getLogger().info("Wandering Merchants has been enabled");
+                getLogger().info("=============================================");
+            }
+        });
     }
     @EventHandler
     public void onNPCRightClick(NPCRightClickEvent event) {
@@ -802,7 +853,7 @@ public class Plugin extends JavaPlugin implements Listener {
                                 }
                                 else if (slot == 22) {
                                     if (event.getClick() == ClickType.RIGHT) {
-                                        inventory.setContents(MerchantData.ItemCraftingRecipieGUI.getContents().clone());
+                                        inventory.setContents(MerchantData.ItemCraftingRecipeGUI.getContents().clone());
                                     }
                                     else {
                                         String MerchantItemName = MerchantData.ItemName.toLowerCase();
@@ -836,7 +887,7 @@ public class Plugin extends JavaPlugin implements Listener {
                                 }
                                 else if (slot == 22) {
                                     if (event.getClick() == ClickType.RIGHT) {
-                                        inventory.setContents(MerchantData.ItemCraftingRecipieGUI.getContents().clone());
+                                        inventory.setContents(MerchantData.ItemCraftingRecipeGUI.getContents().clone());
                                     }
                                     else {
                                         String MerchantItemName = MerchantData.ItemName.toLowerCase();
@@ -935,7 +986,7 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @EventHandler
     public void onNPCDeath(NPCDeathEvent event) {
-    NPC npc = event.getNPC();
+        NPC npc = event.getNPC();
         if (npc.data().get("variant") != null) {
             npc.destroy();
         }
