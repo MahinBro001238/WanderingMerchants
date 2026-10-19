@@ -17,6 +17,8 @@ The latest version plugin was built for Minecraft versions 26.1.2 26.2 and 26.3 
 ## **Note**
 One thing to mention is that EconomyShopGUI requires an economy plugin to function properly such as vault (vault also depends on EssentialsX). You may use any economy plugin.
 
+The seed in the gameplay images is 3353863628485365188 in version 26.3 if anyone cares 😄.
+
 ## **Required Plugins**
 - Citizens2: https://ci.citizensnpcs.co/job/citizens2/
 - EconomyShopGUI: https://www.spigotmc.org/resources/economyshopgui.69927/
