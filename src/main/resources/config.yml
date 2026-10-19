@@ -1,5 +1,5 @@
 # =============================================
-# Wandering Merchants v1.1.3
+# Wandering Merchants v1.1.4
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
@@ -7,12 +7,7 @@
 # =============================================
 
 #DO NOT CHANGE THIS VALUE
-#CHANGING THIS VALUE MAY LEAD TO UNEXPECTED BEHAVIOURS SUCH AS THE PLUGIN CRASHING
-config_version: 1
-
-# The message sent to the player when a merchant spawns nearby
-# Supports MiniMessage formatting
-merchant_spawn_text: "<gray><italic>Hm... something feels different. Did someone just arrive nearby?</italic></gray>"
+config_version: 2
 
 # Time between merchant spawns, in seconds
 # By default, a merchant can spawn once every hour
@@ -26,3 +21,903 @@ merchant_despawn_time: 600
 # Warning: If this value is too high, merchants may stay longer than the specified despawn time
 # This should be less than the despawn time and divide evenly into it
 merchant_despawn_check_frequency: 120
+
+# The radius (in blocks) around a random player within which a merchant can spawn
+merchant_spawn_radius: 100
+
+# Note: This is an advanced field, do not change this unless you know what you are doing
+# The delay in (ticks) before the plugin revokes permission for using SellGUI
+# After closing the GUI. By default it is set to 1 tick
+# If your SellGUI is not working properly and it is saying
+# 'No items found which can be sold.', it means that the plugin is revoking the permission
+# Too fast. Try increasing the delay, it should fix the issue
+sellgui_permission_revoke_delay: 1
+
+# A list of all the merchants in the plugin
+# If you want to remove all merchants
+# Just set merchants to be null like
+# merchants: null
+merchants:
+
+  0:
+    # An ID (string) that is used by the plugin to identify this merchant
+    # Warning: The ID must unique between all merchants and must not contain any spaces
+
+    # READ THIS CAREFULLY
+
+    # Warning: This value cannot be changed. Changing this value will cause
+    # All merchant npcs with the old ID to be permanently deleted. Read the important
+    # notes below for more information
+    id: garrick
+
+    # The name of the merchant
+    name: Garrick
+
+    # The name of the shop of EconomyShopGUI that the merchant would open
+
+    # READ THIS CAREFULLY
+
+    # Note: A page that leads to shop and shop itself is not the same
+    # For example, using the default configuration of EconomyShopGUI as reference
+    # The "Tools and Combat" page that leads to shops but the "Tools" page or "Weapons" page is a shop itself
+
+    # For example if the shop can be opened using "/shop enchanting <player name>" through the console (not in-game)
+    # Then the value of this field will be "enchanting"
+    # Warning: The value of this field must be the exact same as the one used in the "/shop <shop> <player name>" command in the console (not in-game)
+    # Note: Before filling this field, try using "/shop <the shop name> <your in-game name>" through the console to check if it opens a shop or not
+
+    # If you want to see all the shops available in your server then you can do so by visualising the permissions of shops through LuckPerms
+    # Open a LuckPerms web editor using "/lp editor"
+    # Then in the permissions field type "economyshopgui.shop."
+    # And the web editor should bring up all the permissions of the available shops
+    # If it brings up "economyshopgui.shop.enchanting" then your shop name should be "enchanting"
+    # Note: "economyshopgui.shop.all" does not mean there is a shop named "all", it is just a permission that allows players to use all the shops
+    shop: wood
+
+    # If you have found a skin and want to apply it to a merchant
+    # Download that skin and generate the value and signature on mineskin.org and paste them here
+    # If you don't want a custom skin just set the values of skin_value and skin_signature to null like
+    # skin_value: null
+    # skin_signature: null
+    # Warning: Make sure to use quotes around skin_value and skin_signature as they contain
+    # Special characters that would break the YAML parser without them
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxMjU4ODQ0NzM1NCwKICAicHJvZmlsZUlkIiA6ICI5OTdjZjFlMmY1NGQ0YzEyOWY2ZjU5ZTVlNjU1YjZmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbzEyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMwMGIxMDhhMzBiYWYyYjAyYmYzZGI0OTJjY2U4MmM5MDJhZTQwNGVmN2VkYWQ5YTc4NzlhNmFiNmQ2ZDcxZDciCiAgICB9CiAgfQp9"
+    skin_signature: "vR3Z26c2O8pgqzG/PId9Mby0ykepa/Ve7JbHi/6w/j4NMwMb7jQiVeXm32JbJMFYvx+j/ldUniq6FJgdAZiJ4DgVsHQfWDmzaw//nqvwNGOFGNNyi+I2xOFk62t+CghQIWMgcclnDv94ybR8bsN0zXqoAOQCQ5KrzGFdQ3i5y/Wups19SabZ5s/66bBFpme8ycK4vK4qoZfvGviBtFc15NX0dHAy0O6IWRy4TQhU0J2Rf5rx+3+ZbnFnTbOdk/x1K6BvcJd6qPkgoHQPisZ2DAbPBxgSTWhoHpCrzIC7koiRLIbHgsZRlskdjPAA+lNxCdTPB4OB5QqXnT2rzqio1rm9rEKHLpyV4IWrQ3ijB5A2EvoLyLB3jZm9jlJaCC6yLoNfddfp+7ENpakKwfcvMo/xFitoMdQsMOj0X1z4f19mThlW0EBERu39X8Nq6oPCBlJ249iOj/QJHtV8mgzWlrtevfT0h5cJw3yfcte50QiBS2n54a+nlhX/KRSliCv6bc0HR0Wf0Cb7Y8ZOtNWA4r+M/x5kbszosb9KfTB3nShaYJjTjrIbQU61Fi8bJVVxfCZDl+6Zpkmj10vZuJsUqustanY4/MTHj8NZl2wQK68dFLH6LMBhxyIKbqRue1AmTT5Zws7n4PdQuEAiMbCv2sJOeqTQ+IlryIma0bJdalM="
+
+    # The message the merchant says to a player when interacted with
+    # Supports MiniMessage formatting (e.g. "<bold>text</bold>", "<red>text</red>")
+    default_dialogue: "Garrick: Lost my hatchet, lost my work. Bring it back, and I will keep you stocked with wood."
+
+    # The message the merchant says when the player returns the correct item
+    # Supports MiniMessage formatting
+    correct_item_dialogue: "Garrick: There it is! You have my thanks, friend. I will not forget this."
+
+    # The message the merchant says when the player brings the incorrect item
+    # Supports MiniMessage formatting
+    incorrect_item_dialogue: "Garrick: No, that is not what I asked for. Try again and bring me the right item."
+
+    # The message the merchants says to the player when its already in another interaction
+
+    # The message the merchant says to the player when it starts following the player
+    follow_dialogue: "Garrick: So, where are we headed, friend? Lead the way."
+
+    # The message the non-shopkeeper varaint of the merchant says to a player when it stops following the player
+    non_shopkeeper_unfollow_dialogue: "Garrick: Well, this is where we part ways. Thanks for the company, friend!"
+
+    # The message the shopkeeper varaint of the merchant says to a player when it stops following the player
+    shopkeeper_unfollow_dialogue: "Garrick: All right, I'll stay put here. Come back when you need wood or a good tool."
+
+    # The message sent to a player when this merchant spawns near them
+    # Supports MiniMessage formatting
+    # If you don't want such message just set spawn_text to null
+    spawn_text: <gray><italic>Hm... I hear the sound of an axe chopping wood nearby</italic></gray>
+    
+    # Whether the merchant should unitially glow when it spawns
+    glow: true
+
+
+    # The item that must be given to a merchant to turn it into a shopkeeper
+    item:
+
+      # An ID (string) that is used by the plugin to identify this item
+      # Warning: Changing this ID will cause all items with the previous ID to not be accepted by the merchant
+      # Warning: You must use a unique ID for all id fields
+      id: garricks_hatchet
+
+      # The name of the item
+      # Supports MiniMessage formatting
+      name: Garrick's Hatchet
+
+      # Add custom lore to the item
+      # Supports multi-line lore with MiniMessage formatting
+      # If you don't want to add lore, just set lore to be null
+      lore:
+        - Hand this to Garrick
+
+      # Add a custom model data to the item to apply a custom texture over it
+      # Warning: Make sure to use unique model data for each item
+      # Otherwise the same texture may get applied to multiple items
+      # If you don't want to add a custom texture just set custom_model_data to be null
+      custom_model_data: garricks_hatchet
+
+      # The crafting recipe of the item
+      recipe:
+
+        # The actual shape of the recipe
+        shape:
+          - III
+          - IAI
+          - III
+
+        # The items used in the recipe
+        # Must be a valid material name
+        # Full list of materials: https://jd.papermc.io/paper/26.3/org/bukkit/Material.html
+        ingredients:
+          I: IRON_INGOT
+          A: IRON_AXE
+
+    # The item in the merchant's GUI which upon clicking leads to the actual shop
+    shop_icon:
+
+      # The material of the item
+      # Must be a valid material name
+      material: OAK_LOG
+
+      # The name of the item
+      # Supports MiniMessage formatting
+      name: Buy wood
+
+      # Lore of the item
+      lore:
+        - Buy wood related items
+
+    # The item in the merchant's GUI which upon clicking leads to the SellGUI
+    sell_icon:
+
+      # The material of the item
+      # Must be a valid material name
+      material: IRON_AXE
+
+      # The name of the item
+      # Supports MiniMessage formatting
+      name: Sell items
+
+      # Lore of the item
+      lore:
+        - Sell wood items in one go
+
+    # Whether this merchant is enabled
+    # true: merchant will spawn and can be interacted with normally
+    # false: merchant will not spawn, any existing npc of this merchant will be despawned
+    # And the item of this merchant will not be craftable
+    enabled: true
+
+  # IMPORTANT NOTES
+  # Cosmetic changes to an merchant item (name, lore, etc.) only apply to newly crafted versions of that merchant item
+  # The old items of that merchant item will keep their old appearance, but it will still be accepted by the merchant
+  # As long as they have the same ID
+  # Cosmetic changes to a merchant (name, dialogue, skin, etc.) apply to all existing NPCs of that merchant not just new NPCs of that merchant
+  # To permanently remove a merchant, delete its entire entry from this config
+  # The plugin will automatically permanently delete any NPC whose id is no longer present in the config
+
+  1:
+    id: bruna
+    name: Bruna
+    shop: stone
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3NzQ1NzIwMjIyNSwKICAicHJvZmlsZUlkIiA6ICJiYzRlZGZiNWYzNmM0OGE3YWM5ZjFhMzlkYzIzZjRmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICI4YWNhNjgwYjIyNDYxMzQwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzUxZTg1MzdhZTA2Yzg5NzZhMDY5YjdkMzhjZmUxY2E4MjE3ZTE4OTlkYmY0MzA5YmU4NjkyNDc1ZDZmOTk3OTAiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
+    skin_signature: "Hv10YBMSjmoouu/FMB8hcO2rYTs7cTccSYYq3FgcfeJ77D86ZiUnlwj+uB7a0xYVuIsRaDNapu0Fd/51xCILUoZsLcQZpprN1uwul0lrSSmc3pOKkQGY81NY8DInhVrEb7E5PHpb9KtTY95g3SgJRIbfjs7OWwr6gw9mGFBEZbdUX62FxjmCPa2+x2mTj5O27KAWWYQgVg+fKgMGc62KAaaeXYs11QWkzi11dA6eFZU5WIMB2SNkEw0MzRlVvEQc61pg8KzJOSSVgGXzhwT8rhmqx13AchcRP/q7llOaXt0QcYW2Ft7wCulEk6hhKFf+EKJ5I8rFWPbYRyjPBT6jv0V66wEvLp3/Am3W7yXLQD8yYMSwMxM9XlEC5E2FBqAKi+bxpc+9aBYTeLs3M9zD5ixsZ26zPT5N6hfDlVrNNdTYerjp7L6soLQ5knw0/mWeD2BkmEQpiDYwVzCXYSlsybjiS6knZZmKk0nXMAFPytSiF+Jty5TNu7vYzeiKW6eYSf2+SkWArrLhUsK9zoWDBDTbabQf+y7/4wKlubvBXeXdc5F89zCEnjfkDkIr33cyc38YHcUCSUTVBTCUxZyCefjXQ6jm+lLZCJFqnksDHjHnuWn0UN8E1vuqAh5ATm8f6ZRVbDPpzwZ28Ahbim1wGjearKGrpvl0UJF3GLnicqA="
+    default_dialogue: "Bruna: I am Bruna. I work stone into something usable. Bring back my stonecutter, and I will supply you with everything carved from the earth"
+    correct_item_dialogue: "Bruna: Excellent work. This stonecutter will turn rough stone into fine craft. You have my thanks."
+    incorrect_item_dialogue: "Bruna: That won't do. Please bring me the item I asked for."
+    follow_dialogue: "Bruna: All right, I will come along. Just point me toward the work."
+    non_shopkeeper_unfollow_dialogue: "Bruna: That's far enough for now. I'll carry on from here."
+    shopkeeper_unfollow_dialogue: "Bruna: Right, I'll wait here. Come by when you need stone or something carved."
+    spawn_text: <gray><italic>Hm... I hear chisels tapping against stone nearby</italic></gray>
+    glow: true
+    item:
+      id: brunas_stonecutter
+      name: Bruna's Stonecutter
+      lore:
+        - Hand this to Bruna
+      custom_model_data: brunas_stonecutter
+      recipe:
+        shape:
+          - SCS
+          - DTD
+          - SCS
+        ingredients:
+          S: STONE
+          C: COBBLESTONE
+          D: DEEPSLATE
+          T: STONECUTTER
+    shop_icon:
+      material: STONE
+      name: Buy stone
+      lore:
+        - Buy stone related items
+    sell_icon:
+      material: STONECUTTER
+      name: Sell items
+      lore:
+        - Sell stone items in one go
+    enabled: true
+  2:
+    id: mara
+    name: Mara
+    shop: natural
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzA3NjY5NDkxNiwKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ1bnNwZW5kaW5nIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFiNjU0NGFhMWI5MjkyM2M1N2IzMWYxYmZjMTZhOGNiNjg2NjVjYTMwMTUxZWY3NzE3YjBiN2I2MjQzM2NlMjkiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
+    skin_signature: "XEDs9WFvK3tOEsjBKQAyqub+8bb0jyssaKyceFkDzIW+jBtGN+Ump7iv0FnbfLERUa3t3uRjdgNLHHv8Gr8EYAPlYaBDFkBLJ4u0O+mrIHtEpP546UcU36qmgDlx1SPESm36wb4fqNmC/58Lwx2tjmqfCqgGKEdftHq7MfOOaawZAqn0B6TWFAQnFmcIfxEw41arhzPB5Yt5QZ/TLj2EDqETEGY6Na1vT6ARDaKvSe72MemYP6J+ZRJHglNwHXEUA1E+x2JiUP6V3ad9RNimzFRazc9o8/C7hfLT2xG9eHN5q1zFscpzg0fgK735bEejfrFpHonyUVrlPtJX50CpZ0cJAPWyZIAy7usZh+cJ5JUco83i48b36npXTvFK3+OorWU6YBEgTiG+ln/iapuCcJyMTfYxI3onbTRX3RmkoOVilcLonrtOvdP4B5YSoDWbNc2uMWFe4BkKEAfyayaCyhdkkqxA5xYO5juvzNxNXEiiFIFedvjmZ+JjaozvOqlpb+pCC4k5+28daKnKqtSSJ0qqufMW98RWFtcexy6KPqCutuAlDZj3Q5hEHObKNR6Jq7wCrbnnPCppedRbfWcvoD4skYRYPfRD094O9o2sv0SwHzFrMBCE/leRZsXzCrQCSpGrXFTZJkW2BuWXMSb81yj7/4hwxWAmcHz3z5tXryU="
+    default_dialogue: "Mara: You can't collect what you can't dig. Someone walked off with my trowel and now I'm useless. Craft me a new one and I'll sell you everything I've gathered dirt, sand, ice, netherrack, all of it"
+    correct_item_dialogue: "Mara: That's the tool! Now I can get back to digging up the world's hidden treasures."
+    incorrect_item_dialogue: "Mara: Hmm, no. That is not what I need. Could you try again?"
+    follow_dialogue: "Mara: Let us get moving! There is a whole world waiting to be dug up."
+    non_shopkeeper_unfollow_dialogue: "Mara: I'll take it from here. There's plenty more ground to cover."
+    shopkeeper_unfollow_dialogue: "Mara: I'll set up here, then. Come back when you need natural blocks or supplies."
+    spawn_text: <gray><italic>Hm... I can hear someone digging nearby</italic></gray>
+    glow: true
+    item:
+      id: maras_trowel
+      name: Mara's Trowel
+      lore:
+        - Hand this to Mara
+      custom_model_data: maras_trowel
+      recipe:
+        shape:
+          - DSD
+          - MXM
+          - DSD
+        ingredients:
+          D: DIRT
+          S: SAND
+          M: MUD
+          X: IRON_SHOVEL
+    shop_icon:
+      material: DIRT
+      name: Buy natural blocks
+      lore:
+        - Buy natural blocks from all biomes
+    sell_icon:
+      material: SAND
+      name: Sell items
+      lore:
+        - Sell natural blocks in one go
+    enabled: true
+  3:
+    id: dorian
+    name: Dorian
+    shop: decorative_blocks
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzA3ODA1MDY1MSwKICAicHJvZmlsZUlkIiA6ICI2N2M1NzUxMzY1Mzg0MWJjYTQ1MTkwY2IyZGFiMWEwOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJuaXRlc3RhbGtlcjg3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2M5NDg3ZjA3Y2Y3OGJmNGIwN2JjNzRlZWE1ZDA4MDU5ZTk4M2RlMjQ2ZjI3NjI2MGMxNjhiNGFmMmQ4NzViNDIiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
+    skin_signature: "thBMnhussTmaBs3P9JMz77OkG8pU3kFxGar565JaJvTbyaVvT3iSA7bHpTjkl3xcp7S4fT+FrBNvTEVn9zH7Dl8Kg9X8tEf6DqAK1nXwsGfhlC4AiMPzEntVVJLwApB0gPBw/liAKi1qOV9L4bh4OP405oG0R4ADokjsykcmoRB72G+ZsI2NsuFTRS8O99dB+nKyIg+regZVS7ANpmGk6nkoIdaer0Cazi6XcpqgAWqDkZe3QQiSokP7rEytQy7Mg5fszN7FhzQsNXMNJAuDqyaNiNsA/jkXiaZoudPIecy2RRHnFF+VGhROpCk3UXnP0pz/JeFDGa/CVPSiuj/GLItkp080G5NcSku19sTCZcFhi5jYuI7wk9gI2YNX8uzHpFADBo9DmLWyHi9GPp7CMxRtHiN5nt6auNNZdtd4eGCa4TD4ovv4hi2n0fe7fQNPSbhD/TozbOTlqq+P9DbBvGo8Vm+UMJDrUBya1iUKOmR9QXO4dJSbfNbvXtvxK487TPcWr7KLVMx8Yf5xSb2T9Bl+4ZltYWsJjGj5LmjoUvFRhffz/bCVnyJyByV+oBe0Y6cZx+jZ3sPOHHWdhKvYTuWq5h5Q7InArekHLW2Ep/Gvw17fZTJ5c09+dzgY/AJQeaJQNuK5RkcXQLXsDqgbJz/ia7yL3O0kPZMQCM7773o="
+    default_dialogue: "Dorian: A craftsman without his palette is nothing. Mine was taken from me or lost, I'd rather not say. Bring it back, and I shall ensure your structures are worthy of being called art"
+    correct_item_dialogue: "Dorian: Ah, my palette! Now we can bring a little beauty and colour into this world."
+    incorrect_item_dialogue: "Dorian: No, my friend, that is not what I requested. Bring me the proper item."
+    follow_dialogue: "Dorian: Lead the way, my friend. Perhaps the journey will offer some inspiration."
+    non_shopkeeper_unfollow_dialogue: "Dorian: Then we shall part here. There are more sights to see and inspiration to find."
+    shopkeeper_unfollow_dialogue: "Dorian: Very well, I shall remain here. Return when your eye for beauty needs satisfying."
+    spawn_text: <gray><italic>Hm... Someone nearby seems to be working with colourful blocks</italic></gray>
+    glow: true
+    item:
+      id: dorians_palette
+      name: Dorian's Palette
+      lore:
+        - Hand this to Dorian
+      custom_model_data: dorians_palette
+      recipe:
+        shape:
+          - GTG
+          - DXD
+          - GTG
+        ingredients:
+          G: GLASS
+          T: TERRACOTTA
+          D: WHITE_DYE
+          X: CLAY_BALL
+    shop_icon:
+      material: GLASS
+      name: Buy decorative blocks
+      lore:
+        - Buy coloured glass, concrete, terracotta and more
+    sell_icon:
+      material: TERRACOTTA
+      name: Sell items
+      lore:
+        - Sell decorative blocks in one go
+    enabled: true
+  4:
+    id: marcus
+    name: Marcus
+    shop: resources
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc1MjAwMDMxMTkwMCwKICAicHJvZmlsZUlkIiA6ICI1NzI1YWJkMzY4MGI0MWVlOWJjMzhhNmUyM2M5OGNiMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBYmVuZHJlZ2VuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zOWU3Yjg4ZTQ2MmVmZmYwYWVkNDlmZTZiODQwNzc5ODE1ZDZkOTE3YmZlYTA3NzQzMGJmYjIwNGZhYzY3ZTIzIgogICAgfQogIH0KfQ=="
+    skin_signature: "Sm46jOpiP4VQql08UdbRXuqlNMXN3pYw1H9nfl2XvxDVmAQc6avY7JZA3dOjLydG6qvIdeWf5QA0i8cKKDufgyPfb2TZtbVeIfx37NNQbBKWWbSKAN5Cd3gHY2+TxMjAFNpQxHqibOiz9uHe98hchvNq8s2kiAo43bVtB6ejrsohhvt5wPCpBljcl2+emFqIryghJigcpGpROfy2rakQ7lf/y/PFQB0AI1X2e4J/lV/A5JZEz523y5XlmQwT0tpNBmj7kDevJYj3Z+eWkEj0awBTDFjgGuzfl+iuFecL93cWNnPWEj2JwzP2jBBqnXJKX3boq+BFnFurUCC5AA2U0Zkm2pZ6P6yPvpHgw6CZeDH5j5J5FmEArOKYgqcUlGAxhbmclAnw1WbLmtTuf8n5UKW2EXGLcZAZF21eaveve98nlw29rVL+d9hFPybMY7dtMuJqy8bvcWJq7KFATkqv/gxle+Bul+DdfQAxlwDIohZaPtBS8CB9F05emEsrLW8LJyl3qnuu45pc/3OSjGvrlGGyi7GLAIKyFLCUebJNrq3mhAkSNKdD79qoFJBRVzvW+49qWP0xxawzHU+U5kTxLNV96KT72ePccFhlqMh3RIiVkeE0MkFcSjv4Yx0i85+AXRw7GbTdIfm6ZDlg4VaUAbbBDWY6gDLMIqft5g8Q5+c="
+    default_dialogue: "Marcus: No Charm, no trade. Bring it back, and you will have access to my valuables"
+    correct_item_dialogue: "Marcus: The charm! A fine eye for valuable things. Now, let us discuss business."
+    incorrect_item_dialogue: "Marcus: No deal. That isn't what I asked for. Come back with the right item."
+    follow_dialogue: "Marcus: Very well. Lead on; let us see whether this trip proves worthwhile."
+    non_shopkeeper_unfollow_dialogue: "Marcus: Our arrangement ends here. I have other prospects to pursue."
+    shopkeeper_unfollow_dialogue: "Marcus: I shall remain here. Return when you're ready to do business."
+    spawn_text: <gray><italic>Hm... Someone nearby seems to be trading in valuable resources</italic></gray>
+    glow: true
+    item:
+      id: marcuss_charm
+      name: Marcus's Charm
+      lore:
+        - Hand this to Marcus
+      custom_model_data: marcuss_charm
+      recipe:
+        shape:
+          - GDG
+          - DAD
+          - GDG
+        ingredients:
+          G: GOLD_INGOT
+          D: DIAMOND
+          A: AMETHYST_SHARD
+    shop_icon:
+      material: DIAMOND
+      name: Buy resources
+      lore:
+        - Buy valuable resources
+    sell_icon:
+      material: GOLD_INGOT
+      name: Sell items
+      lore:
+        - Sell resource in one go
+    enabled: true
+  5:
+    id: edmund
+    name: Edmund
+    shop: crops
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTczMTA3NTM5NTk5NywKICAicHJvZmlsZUlkIiA6ICIzMzU3MWJiY2UyMDE0MTRiYmNkMDYyMjEyZTI4MjBlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGFkb21JbmF0b3I0NzgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTRiMDY1MWZmZTc4NjI3N2Y1YzQ2ZDA0MmUzMjk5MmQxODEzZThmYTIwMGZiZTY0N2U3ZTExNzU1NTQ0ZjAxMCIKICAgIH0KICB9Cn0="
+    skin_signature: "Owl0tKu5XvedgGFcYWJSaOqi4gcHMi+G1KcTwFJWcjHc1edxJj3nponwC0S8j3Ro1uSvlSjZ8EhkgBDH86CP6Wc/lENoPw78EzhLfO97AHsWKK9TddhTzrkGgDhSiBpRRfDnX/FUzEfT/K2VRSqYTi+ZaZfj31Q9aYXu3mXPJLXKUpWsPz6BAoz93cOBIY+XEk42AwZgo4LBXePcavC0Iw5FeDk60iP0VH2Re94pAOwGHfoJ+thv5uoqwGMbHQPmESeYP0AgNBH6h9FGzrTjlrJKkSI2NM3Ed7ll9/kWPEzJ5TclBLDYA9TAhJSz2r0T2IS2F0YNPcBbyUbYy0lgptOFW/rqx47ViWm4bEOdE4uGncYN2X1OQCD3hHVkKn6EeTX5/apcUKNIXtbbI6DmdvGYAuAhXTMB8FcQRcUooxLRSoaWKjCmWJ7F/2gcaES7EmywrhwK28vmQMQGYFq1bxmfInTruuVmnA41fUqO/jRKAYbBi6qnweIQqNTR4uvEtWN195gzZe087uSwFKrqSyJgXSfD0/NDacQAd5VyIMkD8KqiT5j7ZqBddKF4L01ETvy+8QiJ+AQ4upi1ghWxLPz7FHbPCHHr1kg+KbBkWU2OQdW8KLvLikAXolnRnPZvlraj01ik5JuUAVvvMxWs3ehqYqmZT3HyYIYH2w8j2tA="
+    default_dialogue: "Edmund: My seed pouch went missing and I won't plant a thing without it. It'll turn up somewhere or maybe you can piece one together. Either way, bring it back and you'll have all the crops you need"
+    correct_item_dialogue: "Edmund: There it is! With my seed pouch back, the fields will be flourishing in no time."
+    incorrect_item_dialogue: "Edmund: I'm afraid that isn't the item I need. Please bring the correct one."
+    follow_dialogue: "Edmund: Let us get going, then. There is always more to grow and gather."
+    non_shopkeeper_unfollow_dialogue: "Edmund: I'll head back to my own work now. The fields won't tend themselves."
+    shopkeeper_unfollow_dialogue: "Edmund: I'll stay here for now. Come by when you need crops or farming supplies."
+    spawn_text: <gray><italic>Hm... I can smell freshly harvested crops nearby</italic></gray>
+    glow: true
+    item:
+      id: edmunds_seed_pouch
+      name: Edmund's Seed Pouch
+      lore:
+        - Hand this to Edmund
+      custom_model_data: edmunds_seed_pouch
+      recipe:
+        shape:
+          - WPW
+          - PBP
+          - WPW
+        ingredients:
+          W: WHEAT_SEEDS
+          P: PUMPKIN_SEEDS
+          B: BUNDLE
+    shop_icon:
+      material: WHEAT
+      name: Buy crops
+      lore:
+        - Buy seeds, crops and farming supplies
+    sell_icon:
+      material: CARROT
+      name: Sell items
+      lore:
+        - Sell crops in one go
+    enabled: true
+  6:
+    id: gordan
+    name: Gordan
+    shop: food
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNzMwMDU2MzQ4OCwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjZjQ3OTQ1OGIxZjFmNDNlMzQxMzI3MDllNmZjNjM5Yzg5NzhiMzNmOWViMmU0YTg2M2E1MzJiNTViMTYxZjIiCiAgICB9CiAgfQp9"
+    skin_signature: "Q2zpXmyp+i8T+4CWKAOPVRpK1mQSoYCdWxza6LClcmUwfx4+gNKdn9qGwcZ9cPnVg8EsgckcY1ii5M8qnYqYxGRT1IBIrXaTAK9tT4z2jRMnyprZBYTnVDjc4p4POKE1f7i6L+XflgWnf59gSfo4yQGqyo8OtZhliBfBxdVCogTVgbEz87QUZa18IM6iL03wBJUtoy/RbINgPayvrbxhkEwkf3q374pqCTokTsTxqRo4V5J3f3wV3Z0ttCBCbXFuJ5DsuU9dFfbsezjfucGHBBkI78XarTFaTXqLYql8Poa1MZJiFDy/wYvwWNaiSmfNr2mV8vjp/MeaHBI4YtgVMknYadxnRAYOg9sNQ6wVpEsATfukUx1D3N1eBFDXF0R1CYR2R9+itm56iKcoziqx9Uu7+phiI1C5K6Lvyobi56LWA/CtwMt0M8WG0wYO66RZraZIoG34tmGC64U1SyclSay2qkxQr9+baE85JNQZJnpPg/GgM+ez7q5qiOo1hnV2a2+VEm49AkXwJ4I1CMoTAlQP4j47d7SEovMu6MyLHnPfVlmrbjfOVmSV9aoLqHpElPissA6BWaEQh62yqE3PsQVOIYWptqniFp3L1tPBAbPG9YlGnoVN3yNHE10f5v9U3z1T2RCnnke8YWoBMsVhl1rTMDn0jkM1TnxHIxslD60="
+    default_dialogue: "Gordan: No butcher knife, no cuts. Mine disappeared off my block one morning, gone without a trace. Find it or put one together, and I'll keep you fed better than anyone else in this place"
+    correct_item_dialogue: "Gordan: That's my knife! Now we're cooking. I'll make sure you never go hungry."
+    incorrect_item_dialogue: "Gordan: Not quite, friend. Bring me what I asked for, and we will be in business."
+    follow_dialogue: "Gordan: All right, friend! Lead on, and let us hope there is something good to eat along the way."
+    non_shopkeeper_unfollow_dialogue: "Gordan: All right, I'll stop here. I've got a kitchen to get back to."
+    shopkeeper_unfollow_dialogue: "Gordan: I'll stay here and keep the food coming. Come back hungry, friend!"
+    spawn_text: <gray><italic>Hm... Something delicious seems to be cooking nearby</italic></gray>
+    glow: true
+    item:
+      id: gordans_butcher_knife
+      name: Gordan's Butcher Knife
+      lore:
+        - Hand this to Gordan
+      custom_model_data: gordans_butcher_knife
+      recipe:
+        shape:
+          - SII
+          - SII
+          - "S  "
+        ingredients:
+          S: STICK
+          I: IRON_INGOT
+    shop_icon:
+      material: COOKED_BEEF
+      name: Buy food
+      lore:
+        - Buy meat and food supplies
+    sell_icon:
+      material: BEEF
+      name: Sell items
+      lore:
+        - Sell meat in one go
+    enabled: true
+  7:
+    id: seraphim
+    name: Seraphim
+    shop: tools
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTcxMjM4MDEwMTk4NCwKICAicHJvZmlsZUlkIiA6ICI4ZTZlM2E4ZjRmYjA0NjhlOGQ5MTU5YmU3ZDYxYzRmNSIsCiAgInByb2ZpbGVOYW1lIiA6ICAiR3Vpb2xobzY3OCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lYmMyYjAwMzI2MGE1ZGE1ZDNhNzVjNDg2ZWQyYjhlYzRmOGQ5M2RiNzg4MjUyYWQ5ZGMyNWY4ZTc0NWRlY2RjIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
+    skin_signature: "nbzKTsLaMoQxuoAJtgp0skU3OmrSPRc8FgJAhjFKro/4fWJIpu6UjeSWFIbhIV9jgOy/GBYStD26cJ5yFRxuieZPUfVjLJguwqxuZsiGwuOoMoBw+LjSoEXePPjRKGnj2uekptipNaam6BkHj0wb3skcNO93E/L7l0qsfsJHINzV3aiPw8Wh5TkU+f4c9kev+bGrzUBN5y7dxOosA0klBv1j73XJcxQvA4HFwWkIrnX5hCZwY2X0fw/SQJXNKHskKZQdXnjhTU3hah81ZuDA1MkC7Fg3ccs/NiAq9XD3zItaKgqllhncSF5OvQzF2TnFrFVAPY88tso0unD3vBx4dVnRyIzlb6IsANvpltjZsN7t6JWKJle3JWggnN9lRpc6hfJBCEktPs8QFWBhO19zpcqLz0d3QGEu9nGG9d4PWQVVi9SFoQDqTXx/ji7hz8ZNTH/lYu+fFw4S7kDTy2S9iM2td/Hh/hB/MiO8hFq+ALZfgZbnvB0sqW1Fu93oLxJOiZlubvhSGDYllQYSXn3JcXIj1X2b7rwOlF5nIhcHacZVU23X8eANW5NHOde1IoYlB2WGz80Z94gPU0qNQQ1CD0akuyn6cUAcwY7xxlUQLgN/Amn0nMxdnZyVyuPV0F5vt3o+D7Gt5k50ZoomCq+taJAp3RVTpjEfy9PZ5sKn0to="
+    default_dialogue: "Seraphim: An anvil is not supposed to break. Mine did. Years of use and one day it just gave out on me. Get me a new one and I will make sure you never go without a good tool"
+    correct_item_dialogue: "Seraphim: A fine anvil! With this, I'll get back to making tools that last a lifetime."
+    incorrect_item_dialogue: "Seraphim: This is not what I requested. Return with the proper item."
+    follow_dialogue: "Seraphim: Lead on. A good craftsperson knows that fine work can be found anywhere."
+    non_shopkeeper_unfollow_dialogue: "Seraphim: This is where I leave you. I've tools to mend and work to return to."
+    shopkeeper_unfollow_dialogue: "Seraphim: I'll stay here. Come back when you need a dependable tool."
+    spawn_text: <gray><italic>Hm... I hear metal clanging from a workshop nearby</italic></gray>
+    glow: true
+    item:
+      id: seraphims_anvil
+      name: Seraphim's Anvil
+      lore:
+        - Hand this to Seraphim
+      custom_model_data: seraphims_anvil
+      recipe:
+        shape:
+          - BIB
+          - IAI
+          - BIB
+        ingredients:
+          B: IRON_BLOCK
+          I: IRON_INGOT
+          A: ANVIL
+    shop_icon:
+      material: IRON_PICKAXE
+      name: Buy tools
+      lore:
+        - Buy tools and equipment
+    sell_icon:
+      material: IRON_INGOT
+      name: Sell items
+      lore:
+        - Sell tools in one go
+    enabled: true
+  8:
+    id: edward
+    name: Edward
+    shop: weapons
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYyMzA2MTMyNTc2NywKICAicHJvZmlsZUlkIiA6ICJjNTBhZmE4YWJlYjk0ZTQ1OTRiZjFiNDI1YTk4MGYwMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJUd29FQmFlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIzMTUwNTNhN2MzNWMzMGY0MjhiOGNkZjk0ZGJlZjlmMmY3YzBhZDRhYzEyYzUwNWE2YTVjODZkYzNjMTlhNDEiCiAgICB9CiAgfQp9"
+    skin_signature: "qyI3DwgBDoliq/tCdSoAKGSJSz0P6M9T2rb0VQ7IFl42jnYDOITCPlIwuSlnjg7LcFMbVUt9rYZ61tuSR1NGJg/nJPt384hEfq8s4uq1vt02vWApo0SVzFPvqAuIu7GWC9NguSDF7AIqi7v6U8s/4U3BxG1PKoy6HFkyemPx5W7pZn2Z05TCj7zg/RGTu5pyuSPSBnYFjhcVQupkk+Uwke+/+Z6IwNPyxPAbqyn9gJICyxj/2MIVjpVtplqMKHlAzOv0IEv35xhRUg5kBgFLJ1WIb9zdNYs8VYsQJ/7NnvXOocLhtY7mr6mk1BxaA2nmZJdqPcVITfYKsa7ZIARhHoWaATdB+dTnk51v/6ShtC6oUGpOyWbexStcj9kHjk+YL84wNFA7tM+UOpchidODfsgcC1/LHB+DxbSm1Sf/qzIs6cHsiR87zDML9CE+xGM36jWMzcTnPeoou2naO1izJ6NhVHSWtON3SZ3QIgNnKakilklIUWh5IJN26mrArnHe5v+PfmQu2QGRIT0Z5nYsVyRJoSWZkaB8Qp35ZfF2NZ+fbek+XsCFt2D6lqIkwkR9CsI/xQwhpbaJzw2VuZF/jKpWolR+1VjXg4y/HX0Ur79AGmo0mHGJOC8o+XlJogM846ibmnwAkrUdpM45GMn4+6yw60i+1sktBNMaPs7Y2iyY="
+    default_dialogue: "Edward: Every weapon I have ever forged was made on that table. It went missing and I have not been able to finish a single blade since. Bring me a new one and I will have the finest weapons ready for you"
+    correct_item_dialogue: "Edward: The smithing table! At last, I can return to forging weapons worthy of legends."
+    incorrect_item_dialogue: "Edward: That is not the item I need. Please bring the one I requested."
+    follow_dialogue: "Edward: Show me the way. A smith never knows where the next great weapon begins."
+    non_shopkeeper_unfollow_dialogue: "Edward: The road ends here for now. I've blades waiting to be forged."
+    shopkeeper_unfollow_dialogue: "Edward: I'll remain here. Return when you're ready to arm yourself."
+    spawn_text: <gray><italic>Hm... I hear a hammer ringing against metal nearby</italic></gray>
+    glow: true
+    item:
+      id: edwards_smithing_table
+      name: Edward's Smithing Table
+      lore:
+        - Hand this to Edward
+      custom_model_data: edwards_smithing_table
+      recipe:
+        shape:
+          - IBI
+          - BSB
+          - IBI
+        ingredients:
+          I: IRON_INGOT
+          B: IRON_BLOCK
+          S: SMITHING_TABLE
+    shop_icon:
+      material: IRON_SWORD
+      name: Buy weapons
+      lore:
+        - Buy swords, axes and more
+    sell_icon:
+      material: IRON_AXE
+      name: Sell items
+      lore:
+        - Sell weapons in one go
+    enabled: true
+  9:
+    id: rowena
+    name: Rowena
+    shop: armor
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzEyNTMyNjE5OCwKICAicHJvZmlsZUlkIiA6ICI0OWIzODUyNDdhMWY0NTM3YjBmN2MwZTFmMTVjMTc2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiY2QyMDMzYzYzZWM0YmY4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2UzMDEwNjljYWMxMDcwNTYyYWZjYTFjZWE2MTFhMTVkYTc3ZjU0ZDIwOTlkZmJiZGQ1OWIzMzg0MmJiY2NmNGUiCiAgICB9CiAgfQp9"
+    skin_signature: "Mwyfw6+doePpRp6Poo/GQY7eESwK1W116hpd+ISNqP6DP7Oo5CBeMRVnCIijNU/XoMDgkyihbXF792DnvkK0mWubhS4qRlwxM9YA07iM2kyF+HBMX4+w7NpihgB+wiIIoyqkF5QN6ppKIl18m20jKM8EBsIuuY8CVluyccsbig3l1t+5toqWoVMdxPlr8DVvzxsyBOFX/pWrmFvwLpFdyT7CYRsrkWVCliXXndLfKAQXsIRFuRqxH5L/2fzlF/2TJ6F5mi4lN63qPtjzYf5zRoD1DEPIioe85LP+h1LkW4mECEtd1+RTcOKcOdUCr9gMQqlkH4vNRlpD78LBzPGdW2cmsn1HQg7DJ3cCD3t5uwbIPnyV4D+a0Ud1RKTldDwyY/CdAex7a8Gj04bl8jbsr/kGab4m71jz5BhPTzwiS90mbTZhbXkSBaFQNtO6tMtd+ZBkEvBcRwEqOEsI/MEQubtAoJBk0XUjWa4grRtDy/IzAvPRuj2F4VYeUErZcA3lgjk9wt4e1OP2D33gEMUwJ/ESbl375w0pKxYaypcnK+PRWth5hcyeQip+oJ/YQFD/qBQ28bndtFuo3ErRMag3zx4fyvveO3qMc0vywCoTCgL6oOLCmE1AKCun96rx83m6Vsy/cdk8erRkE3YzVTvPsruShbZCfNk1RLU9wkbGzDg="
+    default_dialogue: "Rowena: Without my bellows the blast furnace is useless and without the blast furnace I cannot smelt a thing. Craft me a new one and my stock is open to you"
+    correct_item_dialogue: "Rowena: Just what I needed! With these bellows, the furnace will roar again."
+    incorrect_item_dialogue: "Rowena: Oh dear, that won't do. Please fetch the item I asked for."
+    follow_dialogue: "Rowena: All right, dear, lead the way. There is always work to be found."
+    non_shopkeeper_unfollow_dialogue: "Rowena: I'll stop here, dear. The furnace won't tend itself."
+    shopkeeper_unfollow_dialogue: "Rowena: I'll stay here, dear. Come back when you need armor or protection."
+    spawn_text: <gray><italic>Hm... I can smell smoke coming from a forge nearby</italic></gray>
+    glow: true
+    item:
+      id: rowenas_bellows
+      name: Rowena's Bellows
+      lore:
+        - Hand this to Rowena
+      custom_model_data: rowenas_bellows
+      recipe:
+        shape:
+          - LIL
+          - IBI
+          - LIL
+        ingredients:
+          L: LEATHER
+          I: IRON_INGOT
+          B: BLAST_FURNACE
+    shop_icon:
+      material: IRON_CHESTPLATE
+      name: Buy armor
+      lore:
+        - Buy armor and protection
+    sell_icon:
+      material: IRON_INGOT
+      name: Sell items
+      lore:
+        - Sell armor in one go
+    enabled: true
+  10:
+    id: leo
+    name: Leo
+    shop: redstone
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYzNjE4MzE3MDYyNywKICAicHJvZmlsZUlkIiA6ICJmMTA0NzMxZjljYTU0NmI0OTkzNjM4NTlkZWY5N2NjNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6aWFkODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmYzYjcwNWM2MGI0M2QzOTM1YzRhYjVhYzgxMmRjYjhhZTBkZTVmNmYzNDRhYTViN2JjYTg2N2ZjMGJiOTIyNyIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
+    skin_signature: "X+aYfonY+uuG+v4Gb0LMz0scJ5x1Dt3F4Y1sDQHoUoQVtjpcD+fMnbY0+KVCuKxVb8BsAFovBFsgFWG9E0Vw4O8pkuj1Um2q7Fh55aBZ/ggmukpysWJ6gZMPh/4nolFUR/mH4jxB36VTOHghlLM1IHpnpEx2z4/WkktCqXQOukQrExk7ufEh6UXYFE1rFMcJWxSpQLR/7xCeGpFtBoCvDF26eoWNdn7hGTc9179zwFebxadK5Al/XdnyZn1p/6e9hyckY+Rtbfe9V0Ke01v5kODQZkxNFTJbjHoA3GKjJO6Sso+l8muPZC1Vz00/wiyz9WlCegL40EWh8/1TSQ7Vej7sv4KKNzZEYMEpkU5qUf1DyymJ/cVJ+U2a/4zxrcpIhzgkI52bBAO5yvyhyv+Nw/4N7ZPOezE98DUocd4ryi8CiRMdHbljQQTDajYqrNP9G73aoP5suekQ2PAEeoAd52/v8PShpZIHLPzekzBT3Zsx3/QvwJH8zREVg9dGczHJj0da4Ljij/0Dtjs3FzALrkH5M6y+0kED9p3kElyXuEBFqF0gqLue+PKp+mnaeM4q8qYOFHBLyJaYusBfimfbuw87FVbUBCrOBiP0bCTr6P80wxoJ9z6noY874MeHgcBmOlqMo4h03YxTRiVu0JVM6eutfuMwqnwle1HR+VfoAP4="
+    default_dialogue: "Leo: I cannot design a single circuit without my measuring compass. It is around here somewhere, or maybe it is not. Build me a new one and I will have every redstone component you could ever need"
+    correct_item_dialogue: "Leo: My measuring compass! Excellent. Now I can get those redstone circuits working precisely."
+    incorrect_item_dialogue: "Leo: No, that is not it. I need the right item before I can continue."
+    follow_dialogue: "Leo: Lead the way! I want to see what interesting mechanisms we might come across."
+    non_shopkeeper_unfollow_dialogue: "Leo: I'll stop following here. I've circuits to calculate and gadgets to test."
+    shopkeeper_unfollow_dialogue: "Leo: I'll wait here. Come back when you need redstone components."
+    spawn_text: <gray><italic>Hm... I hear the faint clicking of redstone mechanisms nearby</italic></gray>
+    glow: true
+    item:
+      id: leos_measuring_compass
+      name: Leo's Measuring Compass
+      lore:
+        - Hand this to Leo
+      custom_model_data: leos_measuring_compass
+      recipe:
+        shape:
+          - RTR
+          - TCT
+          - RTR
+        ingredients:
+          R: REDSTONE
+          T: REDSTONE_TORCH
+          C: COMPASS
+    shop_icon:
+      material: REDSTONE
+      name: Buy redstone
+      lore:
+        - Buy redstone components and supplies
+    sell_icon:
+      material: REDSTONE_TORCH
+      name: Sell items
+      lore:
+        - Sell redstone items in one go
+    enabled: true
+  11:
+    id: sylphie
+    name: Sylphie
+    shop: enchanting
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3OTYwNzg4ODU1MSwKICAicHJvZmlsZUlkIiA6ICJmMTBmYjBlNTkxOTE0YmZhYjIzMDU1NGFlMTc2ZWFlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeHN0aWNEYXZlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FmMThjZGRlY2ZlZWY5NTRmOWQ2NWJhNmU2ZjRmZThiYTNiNDEwNTVhOTlhODE5NDg2Y2Q4NTY5ZGIzY2JhMjciCiAgICB9CiAgfQp9"
+    skin_signature: "ow2svmIre0SIB9PEd5xJn9PIC7XxTN5gRW3x41RTw7YzEYcnuITT57H8AmohChUiVyC9TO2LqyUUr0dv7R5i/e8jiGLamN11FmZBo+T3jQnAQsofDXNMAyax5dN5QEIyUkTFfGMLZSrz0khL4V51DsAIeWtgLRpTynROk5qNgJhhthIrube9rpSRSNSy1PMMnra+m5AOeFZcJn18ookDZmJWBk4zFm0RVnuMzKE+l+NCBdiz7g4rDQgBlWo2vu/oqXX1KJ/MV7BlFuyypoTZuMu9226zTNu2HCTgCoZKo5YH6r4MffubMyfKWl0bCvs3k4R8MZGurclw6X5QWR1dkDdOQUbD13y6lOPdQqL+R2R0h1SpcVJpD2i7+9LAhiqsAvE0lV6k0ACsrnW6qaraZL/sRAdiiUNTLuOqSoyPWeju/JgpjMZpRhBoJSBUZXLefNt0uua6229oZ14iFIpBHcLyJKDPeOJCbwdavDRfP8wIzUIvfGIve+c0TzRORTPtJyKnPqGuIhXOtOwNWyDkZ4CnqWG0Mcc9zP5zXR4bsjUmJJ23gSnkRu8LLorz6rHd8BScKgEoqWmF3myJULuKfeAhTlKbKTOx0b2huG15UuvnwBsiWyeDc14iTQoXFMjI8mTcbdR09IVX3HSow+sncDOYqRTgpwB6Hy5uPgB2FOc="
+    default_dialogue: "Sylphie: I am Sylphie, keeper of enchanted knowledge. Return my grimoire to me, and I shall weave enchantments for those who are worthy enough to wield them"
+    correct_item_dialogue: "Sylphie: My grimoire returns to me. You have done well; its enchanted knowledge shall serve us both."
+    incorrect_item_dialogue: "Sylphie: No, this is not what I requested. Bring me the correct item, please."
+    follow_dialogue: "Sylphie: Very well, seeker. Lead on; the world is full of secrets waiting to be uncovered."
+    non_shopkeeper_unfollow_dialogue: "Sylphie: Our paths part here. I must return to my studies and hidden workings."
+    shopkeeper_unfollow_dialogue: "Sylphie: I shall remain here. Return when you seek enchanted knowledge."
+    spawn_text: <gray><italic>Hm... I spot a strange glow flickering nearby</italic></gray>
+    glow: true
+    item:
+      id: sylphies_grimoire
+      name: Sylphie's Grimoire
+      lore:
+        - Hand this to Sylphie
+      custom_model_data: sylphies_grimoire
+      recipe:
+        shape:
+          - GBG
+          - BGB
+          - GBG
+        ingredients:
+          G: GLOWSTONE_DUST
+          B: BOOK
+    shop_icon:
+      material: ENCHANTED_BOOK
+      name: Enchanted books
+      lore:
+        - Buy enchanted books
+    sell_icon:
+      material: ENCHANTED_BOOK
+      name: Sell items
+      lore:
+        - Sell enchanting related items in one go
+    enabled: true
+  12:
+    id: luna
+    name: Luna
+    shop: potions
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3MTE1Mjk0NTQ4MywKICAicHJvZmlsZUlkIiA6ICJiZmQ3MjMxMGNmYWY0Yjc5OTNlYzhiYzU3ODg3YzU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbHBoYVNwQW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMThlY2U1ZDk3OWM2YTQ5MTNjOTE2MzgxMTFiMGFjZmE3YmVjOWNkYjQ2MjE4NTIwNmY3NmU0MThlNzE2MTk3IiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
+    skin_signature: "SQiu3mTF/CN8DXEvNMzVlZ6bm3J/2dnoLX2U1gEMIrhdrV0WZJTjRTrJPzNoabGCa95mHazaYRCN8Na9qwJw68q5jpPMr54OKh0x9k2ibm47ot44EkpslSA+bILYCe98h0k/L45EZ6rw4DSrNT6g4G6iDmhX87KrKkvDsSgQKiu/MOoY7Ts6fo8I3/Fd/+0haD/ndC+Psw7cYszRbDfjAihBnbWQKikSH/eKI1rkqmju5xh9lkG2EDPFMOKK9V02fmCp2mX270VWnI5GtoBMBFcV5u6u+wZmXiX5zN+pVyiqP6TXSUd2p0WUhic3CeMKU8JXParXjirfTjFUS37A/TAshWwK2Q0fgApNQn+7KGLR/oNtDz238R3ATpVk6KUee4VEZhwpoytntOdPuj+47zIo5JRpFxHSnBlbvKZEDOji47jnuomUFakKuUZpWfxovHM7qpD1vgri0T4axeJwYmyt4UkHQXQVOLA6IjdubjSprQvZNRjREeBRGsXIC3nZev2cWzmGWOHLQDpG5Q/hDnmzpNUqeI24vTfmuBcw4aqK4ZtTY0lsYCe/tXw731UfA0+C/ZyjzJeAnEqPM4eDlY4AtbAFDEqjbQjhKtQDF8MbtmRcfvzD57QqQBrooaPsY2fgYCj7ISF0a84v2Hs8WKr09G0psdGMmxdS6pMxt0E="
+    default_dialogue: "Luna: My brewing stand vanished one night and without it every potion I know is stuck in my head with nowhere to go. Bring me a new one and I will brew anything you need"
+    correct_item_dialogue: "Luna: My brewing stand! Wonderful. Now, what potion shall we prepare first?"
+    incorrect_item_dialogue: "Luna: That isn't what I need, dear. Please bring the item I asked for."
+    follow_dialogue: "Luna: Of course, dear. Lead the way; perhaps we will find something useful for my brews."
+    non_shopkeeper_unfollow_dialogue: "Luna: I'll stay here no longer. There are potions to prepare and herbs to tend."
+    shopkeeper_unfollow_dialogue: "Luna: I'll remain here, dear. Come back when you need potions or brewing supplies."
+    spawn_text: <gray><italic>Hm... I catch the scent of a strange potion brewing nearby</italic></gray>
+    glow: true
+    item:
+      id: lunas_brewing_stand
+      name: Luna's Brewing Stand
+      lore:
+        - Hand this to Luna
+      custom_model_data: lunas_brewing_stand
+      recipe:
+        shape:
+          - BNB
+          - NSN
+          - BNB
+        ingredients:
+          B: BLAZE_POWDER
+          N: NETHER_WART
+          S: BREWING_STAND
+    shop_icon:
+      material: POTION
+      name: Buy potions
+      lore:
+        - Buy potions and brewing supplies
+    sell_icon:
+      material: GLASS_BOTTLE
+      name: Sell items
+      lore:
+        - Sell potions and ingredients in one go
+    enabled: true
+  13:
+    id: ash
+    name: Ash
+    shop: mob_drops
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTcxNjE1ODE0NTA2MywKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jZTJhMjc3MWNiMmYyOGZlMDkzOGZiNTNhZjE1OGI3YmY2Nzk3YjNmYzc0MTdkNjRlZmQ3NDkyMDUzNzdmYzYzIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
+    skin_signature: "gWCjrRwDSwRX8YFDwjXGKplDz7ZNvhiVSzM5SC4lcjUeg/oL9RjpWDFItZ7qwwMrAwZ+dcO1dNvW8lV13YrADOD5E2gEulqAKW8CnLwrbv6ZZkv6sjIFqVCuwQ2j3cEQCPYV0zz+kIQ3dnoDU2kkaTl/0N1h0gRcYvFCHbRlm/A7fblgqFt3aXu2K45/R6TXa49/U3oqCMlVnSvtbe7oe/5g87Mul6Qh8RcjviYl6pTFxtHON9etZBf7hFcmBtpnQG9pJXctm9OUfypKjAxrqOFUGpppkkilqIV8aaLgo7gFcNgkAvsLp62UnzpHAdY9wvLDPhaIo/vr4u5HcqwgAeW2oa81Fn25d84XRS4ytb9P5BsWm/sgI+jXg3jzccpueFiTp0uPj5hlK4cu43QhnNVHxonWFDT6Kl0sAP3qWlHzLjCaBW5UqnSt8QOWi4Wik2e0KtmYtsGEk95n8DzF7GcQs7KV9SS2L7uKtpd7bQQj2dmNf5/JBVHcdDtu88o9oPBSxeEt+ymcILoS+esJE7QoDwrIv+qifPMRUANPYW8H7PX1LwqQhAyiaT1p9/usvrwjz029op0aKQiUJaChI7uFIeGZwjUZbDsdRvMut6+hF87SgSsj4gMtdnC+V4yNhwd6OVk59v2q7BWUyY1dIQsUA03N+1O2oEM03OLNxLM="
+    default_dialogue: "Ash: I do not hunt without my sword. It is out there somewhere and until I have it back I am not going anywhere. Bring it to me and everything I have collected is yours"
+    correct_item_dialogue: "Ash: My sword! Good. The hunt can continue, and I'll share the spoils with you."
+    incorrect_item_dialogue: "Ash: No. That is not what I asked for. Bring the right item, and be quick about it."
+    follow_dialogue: "Ash: Move out. Keep your eyes open; you never know what the trail will bring."
+    non_shopkeeper_unfollow_dialogue: "Ash: This is where we split. The trail calls, and I hunt alone from here."
+    shopkeeper_unfollow_dialogue: "Ash: I'll hold this spot. Come back when you need supplies for the hunt."
+    spawn_text: <gray><italic>Hm... I hear bones rattling somewhere nearby</italic></gray>
+    glow: true
+    item:
+      id: ashs_hunting_sword
+      name: Ash's Hunting Sword
+      lore:
+        - Hand this to Ash
+      custom_model_data: ashs_hunting_sword
+      recipe:
+        shape:
+          - IBI
+          - BSB
+          - IBI
+        ingredients:
+          I: IRON_INGOT
+          B: BONE
+          S: IRON_SWORD
+    shop_icon:
+      material: ROTTEN_FLESH
+      name: Buy mob drops
+      lore:
+        - Buy mob drops and loot
+    sell_icon:
+      material: BONE
+      name: Sell items
+      lore:
+        - Sell mob drops in one go
+    enabled: true
+  14:
+    id: nox
+    name: Nox
+    shop: spawners
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNTgzMDQ1MjczMCwKICAicHJvZmlsZUlkIiA6ICI3NzI3ZDM1NjY5Zjk0MTUxODAyM2Q2MmM2ODE3NTkxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJsaWJyYXJ5ZnJlYWsiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTRjYTQxZGFkMjFlYTIzMzJlNDg4NTAyOTlmYzg1ODk4NTM3ZDljM2Q4N2UzZDQ5NDU2MDJmODM0NDk3Njk5OSIKICAgIH0KICB9Cn0="
+    skin_signature: "JrouHF+BYtNqIlMtTC12iJxZePtKE2I/ghBfvF0IyL3c/7y2e8ssp35OoFa5ZGfwNM8aR+Vd1CPdOSv+LPrfqUWv7DhOfWjZlMb08BKnTtsHgnZCBVt2k4fdvt5CeaWnxXM7opvgduCdgXp384U/qCN/XXlkAvSF9GUHnkTyLWb14T1Scn+9Hklid6Wo22vcRa/Msge/CJrXNAdV0DnGBFLRI3P9JWo2W8OiTPtkRzoTi/kJXZOX5392J4BgdIW0abSI4ikNJ9norWc0mIOw5a3RmZeOTEHNe4IqWxg9TBJxtw5hbgtgwlSq0zJB7am8fFREMIcz+jXP+dRQfcPzII6JT/IEo2+s1GWpahqL30v1zTt9hph6vi9yIaCodvzKsULbkSnBOL1U88YQJkZG1F4EPDni67IZ3aUQsQ4Tc0jZX7Incv28PAbolhgFEdZ9+GtA5l77DnsCrqQFJQcYOormLbiUqanVzACmh8Oj1z1XHQ2nEVLQd9mq42q01aPYa4dTWoZeAdFywDLmLIzGJAhdvU31IzDTQtIoZxQAzJdiOP8IH+Qe8Wcok9CrKH1DAbJ0v/1vGf8UjVrdfyj1VSAuaTj2qPWDdBYpYCBVn2g/KBu5hQJERND/y7osnVnKm1wM6UgSc+a2dNvGLtVPbAEkYCDzkPA1jm/PGc53G4c="
+    default_dialogue: "Nox: My Harvester is missing. Without it I cannot harness what lurks in the unknown. Find me a new one and we can do business"
+    correct_item_dialogue: "Nox: The Harvester! At last, I can resume my work with the forces of the unknown."
+    incorrect_item_dialogue: "Nox: Incorrect. Return with the item I requested, and ask no more."
+    follow_dialogue: "Nox: Proceed. I shall follow, though the shadows rarely reveal where they lead."
+    non_shopkeeper_unfollow_dialogue: "Nox: Go on without me. I must return to what waits beyond the veil."
+    shopkeeper_unfollow_dialogue: "Nox: I will remain here. Return when you seek wares from the unknown."
+    spawn_text: <gray><italic>Hm... I think I see someone moving at the edge of the shadows nearby</italic></gray>
+    glow: true
+    item:
+      id: noxs_harvester
+      name: Nox's Harvester
+      lore:
+        - Hand this to Nox
+      custom_model_data: noxs_harvester
+      recipe:
+        shape:
+          - GNG
+          - NSN
+          - GNG
+        ingredients:
+          G: GHAST_TEAR
+          N: NETHERITE_INGOT
+          S: NETHER_STAR
+    shop_icon:
+      material: SPAWNER
+      name: Buy spawners
+      lore:
+        - Buy mob spawners
+    sell_icon:
+      material: NETHER_STAR
+      name: Sell items
+      lore:
+        - Sell spawner related items in one go
+    enabled: true
+  15:
+    id: lyra
+    name: Lyra
+    shop: decorative
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzIwNzU2MjI0OCwKICAicHJvZmlsZUlkIiA6ICJmMTA0NzMxZjljYTU0NmI0OTkzNjM4NTlkZWY5N2NjNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6aWFkODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzA5OWY1N2FmM2Y3NzY4YjY4NmQ0OTc0NDY1NWVjYTYyYzA3YTAwOGVkZjA3Y2QxZTBkYjVjZTBkMzI4NDM0ZCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
+    skin_signature: "LDSt1hGBILFWxBb3i7hqcAgVtQWbXLj0iFOz74SLiQrc7hY9S/uQTXqTlKN+TZ1KL7doRngL1pBKAgRK/gACF1Q5OYjlRQ+o3B8wKYBn/IP4Boa3GBvHBXtXukK8MV7m2vY4+tWeqp7MOj/12hb3I9+E9eP77qvM4HWNJbOOhMnBukH+nuGR9acl2kcMqE4jd/QSswdtjdDNmMC8D/riIsZSITUD8u1Lur9+v7Ob4Sd3jPvZy6aH0o1MlTQekglVFkffDWWKHhM4/Dvd7bGeLmfnN9MFAj/QGE8WSlwgVkjt7AkFLsziGcCatOOf+FUcshol3xxyhODPsMYEhivcfvnfeiud706pT7AwxDGv0v+bbXqPDB8SbVMsxCdRK2fmM9HsHVPwboSJCQr3Jm2o6COk/qLw02bM+p7uEEDbBWbwOaKdaIzvaLWCaZHCNAFClqxDSV6ZGPiZM3690XE82ITj9T7HRYg8YpwwhFeGF8NMVYMFWSAyZ0Ua7msbFX2Z/X8+75NK6xJpjdFDICPlgTwJIx47gmWtzwAmB9tfsq89r29yTmUVrnWBUm5rmFOWAOFvPStDbWMkjMf6ERa3rbbSkKbtCVuvKKTFSpNagToTK6LpdwJmxPpn9vG0SP/mVemRZzFn7F1wHc5g55hnSrhGDfWbIoyNtkue8Ag0XzM="
+    default_dialogue: "Lyra: I have been everywhere and brought back everything. Lost my spyglass somewhere along the way though. Piece one together and I will sell you things you would not find anywhere else"
+    correct_item_dialogue: "Lyra: My spyglass! Splendid. There are still so many distant wonders to discover."
+    incorrect_item_dialogue: "Lyra: Oh, not that! Please bring me the item I actually asked for."
+    follow_dialogue: "Lyra: Wonderful! Lead the way. Every journey hides something worth discovering."
+    non_shopkeeper_unfollow_dialogue: "Lyra: I'll wander on from here. There's always another horizon to chase."
+    shopkeeper_unfollow_dialogue: "Lyra: I'll wait here for a spell. Come back when you're ready for another discovery."
+    spawn_text: <gray><italic>Hm... Someone nearby seems to be carrying an unusual assortment of goods</italic></gray>
+    glow: true
+    item:
+      id: lyras_spyglass
+      name: Lyra's Spyglass
+      lore:
+        - Hand this to Lyra
+      custom_model_data: lyras_spyglass
+      recipe:
+        shape:
+          - ACA
+          - CSC
+          - ACA
+        ingredients:
+          A: AMETHYST_SHARD
+          C: COPPER_INGOT
+          S: SPYGLASS
+    shop_icon:
+      material: OAK_SAPLING
+      name: Buy decorative
+      lore:
+        - Buy saplings, corals, banner patterns and more
+    sell_icon:
+      material: TUBE_CORAL
+      name: Sell items
+      lore:
+        - Sell decorative items in one go
+    enabled: true
+  16:
+    id: flora
+    name: Flora
+    shop: dyes
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNDEwNTY0MDYwOSwKICAicHJvZmlsZUlkIiA6ICI5ZDEzZjcyMTcxM2E0N2U0OTAwZTMyZGVkNjBjNDY3MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYWxvZGFvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzY2MDNmMDRmYzhjYzVjNDJjM2M3NTYxNGQ3YTFkOWNlYjMxOTFiZDU4NDk5ODNkMDg2NWM3ZTQ5ZjllMjk3MmIiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
+    skin_signature: "XwOJn9etUedxaw0az0H53IUHM8sQQdRuCqOsGOqmyVyf1F+K19oMVRbrXpqqWgynXdD5WUn9xQIiIgUWA1zjCmdY/Evb9syd8URDcGJLm/zBjYahbhj124AaLcAXZTjbRsmrbwbhL/P9FgMT4zNEQijz3JMp7qLDGOzehiaulLOhRfYKOJ6Hh7295bnpugFnjCi7mMNlBqC1kXwIdexh1CaJ+jCbFPgn5MMxzpvj5wgqJFNJ0ZxKjxV9wfe/6DNJY3BUe6SNSctptJ8IuGn6Jkm6Nvq+b8QrOKcy9JeWjpsAiLB86F1GFRrpvlMijsk5/v0W07zZKspWOeE3gjLRysUIyQQ7KSUw9NTYfL+jrCHxLXmwN9SotI3r+TibYAfVoBVPNN3hD2kxgEtfkGNYRTYP4r3IHsEvy+e1h5rGOtsHakYSdlFyIc7JjlhADk2xlrb40lxf8aA3kP9NY+4cLwu7Yh8CNyi906L2bkgnQ15W7cnRCd1XpXpQhXlcrF5ea4sJ77md+/K7sydHDOWbWNaFW1lj9syQjfrvr6ParzSOxRjvYcc76kG3AILlqBau5mMgha/GrVbrqv7XHdNh+qyXrLXQDi72BvtMDIM1N+1c1CThbzstRyJmoxV94VSadXPBhsOvNHQdhINLRs/2MnBaozRKfgBRCjHXdX4aGZw="
+    default_dialogue: "Flora: My lavender went missing and without it I cannot feel at home. Find me a new one and everything I have gathered from the forest is yours"
+    correct_item_dialogue: "Flora: My lavender! Oh, how lovely. Now the forest feels a little more like home again."
+    incorrect_item_dialogue: "Flora: Oh, that isn't the one I need. Could you please find the right item?"
+    follow_dialogue: "Flora: Of course, dear. Let us wander a while; the forest always has something to share."
+    non_shopkeeper_unfollow_dialogue: "Flora: I'll stay here and let the forest guide me from now on."
+    shopkeeper_unfollow_dialogue: "Flora: I'll stay here, dear. Come back when you need something from the forest."
+    spawn_text: <gray><italic>Hm... I can smell fresh flowers blooming nearby</italic></gray>
+    glow: true
+    item:
+      id: floras_lavender
+      name: Flora's Lavender
+      lore:
+        - Hand this to Flora
+      custom_model_data: floras_lavender
+      recipe:
+        shape:
+          - FIF
+          - IAI
+          - FIF
+        ingredients:
+          F: FEATHER
+          I: INK_SAC
+          A: ALLIUM
+    shop_icon:
+      material: ALLIUM
+      name: Buy flowers and dyes
+      lore:
+        - Buy flowers, ink and dyes
+    sell_icon:
+      material: INK_SAC
+      name: Sell items
+      lore:
+        - Sell flowers and dyes in one go
+    enabled: true
+  17:
+    id: jasper
+    name: Jasper
+    shop: music
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzI0MDMwNjE5NywKICAicHJvZmlsZUlkIiA6ICJkYTA1Y2Q3OWZkYjc0MDJlYTdjNjMzY2NkZmYzMDI4YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJGZXJuYW5kMGFsMG5zMCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jMTg0YjAxMjU3M2RlNDdjNDgyZGNhN2IzNDZjYzI1MmE4Njg5NTAzNWQ4MTkyZjE1MzkzMjBjYmM5ZTFiZGYwIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
+    skin_signature: "tA920HsEjeGOPJiYwvyEzLxNLljreLEfnaGqm1cHrc/V0Wai7b9PTC8HV4CxFIdMZMKVUp7t+3n/uOhU7GL7IqXyoR77gPR0wGBNtRKlelz3JkXZLKorqvV6zIjw5lswLtNnu0nWQELjfRtLoA4Y7WCfcKDDSD3AmUdC+ETqs4H58/JXraHtc1O3AiHn6fkzWzN9dwqIIw/rPDAOiv9P1UPYMFvo1jV84cakCDsfcvklTBDPxLwLNqSsG7xvwIHe1/LwlkXbu8jyKRr+HLp8tOtdxx4skllnBbJkRZWvW9MnnPhGhUpka/oGH3MTFSoM9xi3YSjCvPySqaxK6bzF8GuM/snNaFVfi8cj7r0/sQmQnm1ewvWb750J8Hj0uJnetqYtzX7H6GfOUJeOmFOLvsvGLluaYudG+vj4IDgzQdUD9RjesBUyFLu8AhZyESuvf0SgYp1XJtCprk2+8Bm5Aq8CkqlO1juu9+hefdwBDnjUMhk/uHm7zWlTa4WIAwxrPCyi0GXsgrgcRgAfQwvb5MG7iJfrFC3RTmI6a5onPy6j2u7rtgERoHmUWlRkhGV1xzjhNU/gRMoKKJmhZV0s/HPZAdUlA2UfOlFFqxaEnRzmmhG3ap1rC+fXMjvcly8VgvC4E+kvXLS8VBWMO6DggQNvdLaIB4ipjCEpaMua1AE="
+    default_dialogue: "Jasper: A disc collector without a record player is just a man holding circles. Mine broke and I have not been the same since. Build me a new one and I will let you browse the collection"
+    correct_item_dialogue: "Jasper: My record player! Now that's music to my ears. Let's hear what treasures you've brought."
+    incorrect_item_dialogue: "Jasper: Hmm, no. That is not the item I requested. Give it another try."
+    follow_dialogue: "Jasper: All right, mate! Lead on; maybe we will find somewhere with a good tune."
+    non_shopkeeper_unfollow_dialogue: "Jasper: I'll stop here for now. I've records to find and melodies to chase."
+    shopkeeper_unfollow_dialogue: "Jasper: I'll stay here, mate. Come back when you're ready to browse my collection."
+    spawn_text: <gray><italic>Hm... I hear a faint tune drifting from somewhere nearby</italic></gray>
+    glow: true
+    item:
+      id: jaspers_record_player
+      name: Jasper's Record Player
+      lore:
+        - Hand this to Jasper
+      custom_model_data: jaspers_record_player
+      recipe:
+        shape:
+          - WDW
+          - DJD
+          - WDW
+        ingredients:
+          W: OAK_PLANKS
+          D: MUSIC_DISC_13
+          J: JUKEBOX
+    shop_icon:
+      material: MUSIC_DISC_13
+      name: Buy music discs
+      lore:
+        - Buy all kinds of music discs
+    sell_icon:
+      material: JUKEBOX
+      name: Sell items
+      lore:
+        - Sell music discs in one go
+    enabled: true
+  18:
+    id: rufus
+    name: Rufus
+    shop: storage
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3NzA0NTgxMjI5NCwKICAicHJvZmlsZUlkIiA6ICI2MzA1MDhmN2YyODg0N2E1OTA0ZTk2Mjc3NmFjM2ExMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJkeWxhbmNhdHMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTFlMDkyZjFmYjg2MzI1MjFkZDdlZTBkNzZlM2Q2ZGE5OTY0NTUwZDVhNWMzMjhhYTA4M2Q4ZDdmMTY4NTQ2MiIKICAgIH0KICB9Cn0="
+    skin_signature: "yA6p5DlDk5KKzbEydnzZtuVkCygaP181wHjip46mqQr2drf56CvlqIv4RCQ8cU5iYtt1ce8atoS09oWFIlL8SGokqv7NxW7rk08h43yLBxmeaJH06jB7j7v4hqRTmXmefmcbr+ab9PxBGOa1MMWiwWD3KqQVWqhnWdSvJgOcokusQOG0SwST5Vwy0fmOJrBT0qR8l8mWJVq8JZoMMwt82T916//JQwuW9eGA7CQjco66JrUJVKr3lSZdl3Wt7hkh7amnpP2BVjaJZMRfCLTtg3KZVE27RkKcKcKgYUmrt5qyePTtM2xEOZg4EYnzzdKEy0YUTpKbHfdXUVZfQW/fxXyj2q0FXlpVnubq+jS0N59kmdn9kacxQNIvMa/kO2td8gnkM4GvN46rm8fhgpY8C2qGKaSZ96CyXhFzvKiRVCR+Y/K32238wA47Gh6Y1Y0UtDZJpb9FWqmUant/4zrkbcmXhSBrvKK1XkCFOA8GQ4Wq9vv5GR/m5tKJA4X7O3D7Q60HIS+ewuxCrlzHpIoLRZq3i7TqKnT7s8jC1IiF72UgzUf3NVFSZKzmEJt//NtJ30dYDzNZAdcBvwJTny8JQZEH6jili7aA7+rXXfQDh/ESlVvZPZ1RJQi2iqmO8MGbAdWaP2/v0yCplhmUQAkNNn0Y4miu/pER46qn08VAR6A="
+    default_dialogue: "Rufus: My barrel went missing and without it I have nowhere to put anything. Find me a new one and I will have every storage solution you could ever need"
+    correct_item_dialogue: "Rufus: A barrel! Perfect. Now there's room for everything, and plenty more besides."
+    incorrect_item_dialogue: "Rufus: That won't work, mate. Bring me the item I asked for, and we'll be sorted."
+    follow_dialogue: "Rufus: Right behind you, mate. Let us see if we can find something worth storing."
+    non_shopkeeper_unfollow_dialogue: "Rufus: I'll stop here, mate. Need to get back to sorting my stock."
+    shopkeeper_unfollow_dialogue: "Rufus: I'll stay put, mate. Come back when you need somewhere to stash your goods."
+    spawn_text: <gray><italic>Hm... I hear wooden crates clattering nearby</italic></gray>
+    glow: true
+    item:
+      id: rufuss_barrel
+      name: Rufus's Barrel
+      lore:
+        - Hand this to Rufus
+      custom_model_data: rufuss_barrel
+      recipe:
+        shape:
+          - PSP
+          - SBS
+          - PSP
+        ingredients:
+          P: OAK_PLANKS
+          S: OAK_SLAB
+          B: BARREL
+    shop_icon:
+      material: CHEST
+      name: Buy storage
+      lore:
+        - Buy chests, barrels, shulker boxes and more
+    sell_icon:
+      material: BARREL
+      name: Sell items
+      lore:
+        - Sell storage items in one go
+    enabled: true
