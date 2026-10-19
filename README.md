@@ -7,7 +7,7 @@ Wandering Merchants brings RPG-style merchants to your server. Instead of every 
 The NPCs themselves are created and controlled through Citizens2. For the actual trading functionality of buying and selling, instead of reinventing a new shop system, the merchants use EconomyShopGUI (which directly plugs into your server's economy) for their shops, buying from them uses your existing in-game currency meaning all shop related configuration can be done through EconomyShopGUI's config. Merchants that have not been given their desired items will disappear after a certain amount of time.
 
 ## **Minecraft Version And Server Software**
-The latest version plugin was built for Minecraft versions between 26.1.2 and 26.3 running on PaperMC. It may or may not work on other server software. It should work on forks of PaperMC such as Purpur and Pufferfish, though it has not been tested on them.
+The latest version plugin was built for Minecraft versions 26.1.2 26.2 and 26.3 running on PaperMC. It may or may not work on other server software. It should work on forks of PaperMC such as Purpur and Pufferfish, though it has not been tested on them.
 
 ## **Get Full Experience Of This Plugin**
 - Make sure that the permissions 'economyshopgui.shop' and 'economyshopgui.sellgui.all' are set to false. This makes it so that players can make transactions through the merchants only otherwise why would players even bother to go to a merchant to buy or sell items when then can just do so using commands. To configure these permissions, you may use any permission manager plugin.
