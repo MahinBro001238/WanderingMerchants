@@ -265,25 +265,30 @@ public class Plugin extends JavaPlugin implements Listener {
         MerchantCount = merchants.size();
         String VersionString = "";
         int VersionInteger = 0;
+        HttpURLConnection GithubRequest = null;
         Scanner scanner = null;
         try {
-            HttpURLConnection GithubRequest = (HttpURLConnection) new URI("https://api.github.com/repos/MahinBro001238/WanderingMerchants/releases/latest").toURL().openConnection();
+            GithubRequest = (HttpURLConnection) new URI("https://api.github.com/repos/MahinBro001238/WanderingMerchants/releases/latest").toURL().openConnection();
             GithubRequest.setConnectTimeout(5000);
             GithubRequest.setReadTimeout(5000);
             scanner = new Scanner(GithubRequest.getInputStream());
             VersionString = scanner.useDelimiter("\\A").next().split("\"tag_name\":\"v")[1].split("\"")[0];
             scanner.close();
+            GithubRequest.disconnect();
             VersionInteger = Integer.parseInt(VersionString.replace(".", ""));
         }
         catch (Exception e) {
+            if (GithubRequest != null) {
+                GithubRequest.disconnect();
+            }
             if (scanner != null) {
                 scanner.close();
             }
         }
-        if (VersionInteger > 114) {
+        if (VersionInteger > 115) {
             UpdateStatus = "There is a new update: v" + VersionString;
         }
-        else if (VersionInteger == 114) {
+        else if (VersionInteger == 115) {
             UpdateStatus = "You are using the latest version";
         }
         else {
@@ -391,7 +396,7 @@ public class Plugin extends JavaPlugin implements Listener {
             }
         }
         getLogger().info("=============================================");
-        getLogger().info("Wandering Merchants v1.1.4");
+        getLogger().info("Wandering Merchants v1.1.5");
         getLogger().info("Made by MahinBro001238");
         getLogger().info("Licensed under the Apache License 2.0");
         getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
@@ -603,7 +608,7 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @Override
     public void onDisable() {
-        getLogger().info("Wandering Merchants v1.1.4 has been disabled");
+        getLogger().info("Wandering Merchants v1.1.5 has been disabled");
     }
     // ---------------------------------------------
     // LEGACY CODE
