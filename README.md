@@ -1,34 +1,26 @@
-![WanderingMerchants](https://raw.githubusercontent.com/MahinBro001238/WanderingMerchants/main/Logo%20Banner.png)
+![WanderingMerchants](https://raw.githubusercontent.com/MahinBro001238/WanderingMerchants/main/Banner.png)
 
-## **Brief Overview**
-Wandering Merchants brings RPG-style merchants to your server. Instead of every shop being in a fixed location like being confined to a single market area, these merchants spawn and roam the world on their own, and stumbling across one out in the wild make the server feel more alive. When a player finds a merchant, the player must give it an item specific to its personality and in return the merchant will allow the player to interact with it to browse and buy items.
+Wandering Merchants brings RPG-style travelling traders to your server. Instead of every shop being in a fixed location, these merchants roam the world on their own, and stumbling across one out in the wild feels like a small event. It makes exploration more rewarding and gives your world the feel of a living, populated place where trade happens out in the world rather than being confined to a single market area
 
-## **Setup Guide**
-- Make sure that the permissions 'economyshopgui.shop' and 'economyshopgui.sellgui.all' are set to false. This makes it so that players can make transactions through the merchants only otherwise why would players even bother to go to a merchant to buy or sell items when then can just do so using commands. To configure these permissions, you may use any permission manager plugin.
+Merchants are NPCs that spawn randomly around the world rather than being placed by an admin. When a player finds one, they can interact with it to browse and buy items. Because the merchants are wired into your server's economy, buying from them uses your existing in-game currency, so the prices and money all flow through the same system your players already use for everything else. This turns exploring into a way to find deals and rare goods rather than just fighting mobs and gathering resources
 
-- Make sure to set 'direct-shop-command-console' to 'true' in the EconomyShopGUI's config. This is because if a player were to open a shop, the player could just use the back button to go the main menu of the plugin and access all the other shops that the merchant was not supposed to give access to.
+Under the hood, the NPCs themselves are created and controlled through Citizens, which handles their appearance, movement, and persistence. The actual buying and selling is powered by EconomyShopGUI, meaning the plugin hooks into an established shop system rather than reinventing one, and all transactions respect your configured shop prices. Because the merchants spawn on a timer and manage their own lifecycle, they come and go naturally without needing an admin to place or remove them
 
-## **Under The Hood**
-The NPCs themselves are created and controlled through Citizens2. For the actual trading functionality of buying and selling, instead of reinventing a new shop system, the merchants use EconomyShopGUI (which directly plugs into your server's economy) for their shops, buying from them uses your existing in-game currency meaning all shop related configuration can be done through EconomyShopGUI's config. Merchants that have not been given their desired items will disappear after a certain amount of time.
+The latest version plugin was built for Minecraft 26.3 running on PaperMC. It may or may not work on other server software. It should work on forks of PaperMC such as Purpur and Pufferfish, though it has not been tested on them. Versions of this plugin that support older Minecraft versions are available, however when new features are added, they will only be added to the latest version of Minecraft. This may change if the plugin gets more attention
 
-## **Minecraft Version And Server Software**
-The latest version plugin was built for Minecraft versions 26.1.2 26.2 and 26.3 running on PaperMC. It may or may not work on other server software. It should work on forks of PaperMC such as Purpur and Pufferfish, though it has not been tested on them.
+So far the config file only allows little customization however full merchant customization and the ability to add new custom merchants through the config file is planned for a future update
 
-## **Note**
-One thing to mention is that EconomyShopGUI requires an economy plugin to function properly such as vault (vault also depends on EssentialsX). You may use any economy plugin.
+This plugin depends on Citizens, EconomyShopGUI, and LuckPerms
 
-The world seed used in the gameplay images is 3353863628485365188 in version 26.3 if anyone cares 😄.
-
-## **Required Plugins**
-- Citizens2: https://ci.citizensnpcs.co/job/citizens2/
+- Citizens: https://ci.citizensnpcs.co/job/citizens2/
 - EconomyShopGUI: https://www.spigotmc.org/resources/economyshopgui.69927/
+- LuckPerms: https://modrinth.com/plugin/luckperms
 
-## **Optional Plugins**
-- LuckPerms: https://modrinth.com/plugin/luckperms (you can use whatever permission manager plugin you like)
-- Vault 2.0: https://modrinth.com/plugin/vault-2.0-economy-plugins (you can use whatever economy plugin you like)
+In order to work correctly, this plugin assumes that LuckPerms' default group has '*' set to false
+Make sure to set 'direct-shop-command-console' to 'true' in the EconomyShopGUI plugin's config
+LuckPerms' default group must be configured so that 'economyshopgui.shop' and 'economyshopgui.sellgui.all' permissions are set to false
+Another thing to mention is that EconomyShopGUI requires an economy plugin to function properly such as vault (vault also depends on EssentialsX) however it has not been listed as a dependency for Wandering Merchants does not care which economy plugin is being used
 
-## **Support**
 For support or questions, join my discord server: https://discord.gg/8yrbGUCFFD
 
-## **License**
 Licensed under the Apache License 2.0
