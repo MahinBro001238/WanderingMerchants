@@ -7,6 +7,7 @@ import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.MetadataStore;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.trait.FollowTrait;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.citizensnpcs.trait.LookClose;
 import org.bukkit.entity.Entity;
 import java.util.Scanner;
@@ -15,10 +16,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import net.citizensnpcs.trait.TargetableTrait;
 import net.citizensnpcs.trait.waypoint.Waypoints;
-import org.bukkit.command.Command;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -26,12 +26,14 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
+import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -47,6 +49,7 @@ import java.util.Random;
 import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 public class Plugin extends JavaPlugin implements Listener {
     private NamespacedKey MerchantItemKey;
@@ -54,7 +57,7 @@ public class Plugin extends JavaPlugin implements Listener {
     private int MerchantCount;
     private String UpdateStatus;
     private long SellGUIPermissionRevokeDelay;
-    private boolean NPCMigrationNeeded = false;
+    private Component NoPermissionMessage;
     private static class Merchant {
         public String id;
         public String name;
@@ -71,12 +74,20 @@ public class Plugin extends JavaPlugin implements Listener {
         public boolean glow;
         public String ItemId;
         public Component ItemName;
+        public List<Component> ItemLore;
         public String ItemCMDS;
+        public ItemStack item;
         public Inventory ItemCraftingRecipeGUI;
+        public Material ShopIconMaterial;
+        public Component ShopIconName;
+        public List<Component> ShopIconLore;
         public ItemStack ShopIcon;
+        public Material SellIconMaterial;
+        public Component SellIconName;
+        public List<Component> SellIconLore;
         public ItemStack SellGUIIcon;
         public boolean enabled;
-        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component DefaultDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, Component SpawnText, boolean glow, String ItemId, Component ItemName, String ItemCMDS, Inventory ItemCraftingRecipeGUI, ItemStack ShopIcon, ItemStack SellGUIIcon, boolean enabled) {
+        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component DefaultDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, Component SpawnText, boolean glow, String ItemId, Component ItemName, List<Component> ItemLore, String ItemCMDS, ItemStack item, Inventory ItemCraftingRecipeGUI, Material ShopIconMaterial, Component ShopIconName, List<Component> ShopIconLore, ItemStack ShopIcon, Material SellIconMaterial, Component SellIconName, List<Component> SellIconLore, ItemStack SellGUIIcon, boolean enabled) {
             this.id = id;
             this.name = name;
             this.shop = shop;
@@ -92,9 +103,17 @@ public class Plugin extends JavaPlugin implements Listener {
             this.glow = glow;
             this.ItemId = ItemId;
             this.ItemName = ItemName;
+            this.ItemLore = ItemLore;
             this.ItemCMDS = ItemCMDS;
+            this.item = item;
             this.ItemCraftingRecipeGUI = ItemCraftingRecipeGUI;
+            this.ShopIconMaterial = ShopIconMaterial;
+            this.ShopIconName = ShopIconName;
+            this.ShopIconLore = ShopIconLore;
             this.ShopIcon = ShopIcon;
+            this.SellIconMaterial = SellIconMaterial;
+            this.SellIconName = SellIconName;
+            this.SellIconLore = SellIconLore;
             this.SellGUIIcon = SellGUIIcon;
             this.enabled = enabled;
         }
@@ -138,30 +157,6 @@ public class Plugin extends JavaPlugin implements Listener {
         }
         return null;
     }
-    // ---------------------------------------------
-    // LEGACY CODE
-    // ---------------------------------------------
-    private int MigrateItem(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return 2;
-        }
-        if (meta.getPersistentDataContainer().has(MerchantItemKey, PersistentDataType.STRING)) {
-            return 1;
-        }
-        if (meta.hasLore() && !meta.lore().isEmpty()
-                && PlainTextComponentSerializer.plainText().serialize(meta.lore().get(0)).startsWith("Hand this to")) {
-            String oldCMD = meta.getCustomModelDataComponent().getStrings().get(0);
-            if (oldCMD.equals("rufus_barrel")) {
-                oldCMD = "rufuss_barrel";
-            }
-            meta.getPersistentDataContainer().set(MerchantItemKey, PersistentDataType.STRING, oldCMD);
-            item.setItemMeta(meta);
-            return 0;
-        }
-        return 2;
-    }
-    // ---------------------------------------------
     @Override
     public void onEnable() {
         MerchantItemKey = new NamespacedKey(this, "merchant_item");
@@ -170,29 +165,21 @@ public class Plugin extends JavaPlugin implements Listener {
         // ---------------------------------------------
         // LEGACY CODE
         // ---------------------------------------------
-        int config_version = config.getInt("config_version");
-        if (!config.isSet("config_version") || config_version < 2) {
-            NPCMigrationNeeded = true;
-            int OldMerchantSpawnFrequency = config.getInt("merchant_spawn_frequency");
-            int OldMerchantDespawnTime = config.getInt("merchant_despawn_time");
-            int OldMerchantDespawnCheckFrequency = config.getInt("merchant_despawn_check_frequency");
-            saveResource("config.yml", true);
-            reloadConfig();
-            config = getConfig();
-            config.set("merchant_spawn_frequency", OldMerchantSpawnFrequency);
-            config.set("merchant_despawn_time", OldMerchantDespawnTime);
-            config.set("merchant_despawn_check_frequency", OldMerchantDespawnCheckFrequency);
+        if (config.getInt("config_version") < 3) {
+            config.set("no_permission_message", "<red>You don't have permission to use this command.</red>");
+            config.set("config_version", 3);
             saveConfig();
         }
         // ---------------------------------------------
         long MerchantSpawnFrequency = config.getInt("merchant_spawn_frequency") * 20L;
         long MerchantDespawnTime = config.getInt("merchant_despawn_time") * 1000L;
         long MerchantDespawnCheckFrequency = config.getInt("merchant_despawn_check_frequency") * 20L;
-        SellGUIPermissionRevokeDelay = config.getLong("sellgui_permission_revoke_delay");
         int MerchantSpawnRadius = config.getInt("merchant_spawn_radius");
+        SellGUIPermissionRevokeDelay = config.getLong("sellgui_permission_revoke_delay");
+        MiniMessage MiniMessageInstance = MiniMessage.miniMessage();
+        NoPermissionMessage = MiniMessageInstance.deserialize(config.getString("no_permission_message"));
         ConfigurationSection MerchantsSection = config.getConfigurationSection("merchants");
         if (MerchantsSection != null) {
-            MiniMessage MiniMessageInstance = MiniMessage.miniMessage();
             for (String key: MerchantsSection.getKeys(false)) {
                 ConfigurationSection MerchantSection = MerchantsSection.getConfigurationSection(key);
                 String id = MerchantSection.getString("id");
@@ -220,10 +207,11 @@ public class Plugin extends JavaPlugin implements Listener {
                     ItemLore.add(MiniMessageInstance.deserialize(line));
                 }
                 String ItemCMDS = ItemSection.getString("custom_model_data");
+                ItemStack item = CreateItem(Material.ENCHANTED_BOOK, ItemName, ItemLore, ItemCMDS, ItemId);
                 ConfigurationSection RecipeSection = ItemSection.getConfigurationSection("recipe");
                 List<String> shape = RecipeSection.getStringList("shape");
                 ConfigurationSection IngredientsSection = RecipeSection.getConfigurationSection("ingredients");
-                Inventory ItemCraftingRecipeGUI = Bukkit.createInventory(null, 45, ItemName);
+                Inventory ItemCraftingRecipeGUI = Bukkit.createInventory(new InventoryOwner("Wandering Merchants Item Crafting Recipe GUI"), 45, ItemName);
                 for (int i=0; i<3; i++) {
                     String LetterRow = shape.get(i);
                     for (int j=0; j<3; j++) {
@@ -250,10 +238,10 @@ public class Plugin extends JavaPlugin implements Listener {
                 }
                 ItemStack SellGUIIcon = CreateItem(SellIconMaterial, SellIconName, SellIconLore, null, null);
                 boolean enabled = MerchantSection.getBoolean("enabled");
-                Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, DefaultDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, SpawnText, glow, ItemId, ItemName, ItemCMDS, ItemCraftingRecipeGUI, ShopIcon, SellGUIIcon, enabled);
+                Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, DefaultDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, SpawnText, glow, ItemId, ItemName, ItemLore, ItemCMDS, item, ItemCraftingRecipeGUI, ShopIconMaterial, ShopIconName, ShopIconLore, ShopIcon, SellIconMaterial, SellIconName, SellIconLore, SellGUIIcon, enabled);
                 merchants.add(merchant);
                 if (enabled) {
-                    ShapedRecipe ItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, ItemId), CreateItem(Material.ENCHANTED_BOOK, ItemName, ItemLore, ItemCMDS, ItemId));
+                    ShapedRecipe ItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, ItemId), item);
                     ItemCraftingRecipe.shape(shape.get(0), shape.get(1), shape.get(2));
                     for (String ingredient: IngredientsSection.getKeys(false)) {
                         ItemCraftingRecipe.setIngredient(ingredient.charAt(0), Material.valueOf(IngredientsSection.getString(ingredient)));
@@ -285,10 +273,10 @@ public class Plugin extends JavaPlugin implements Listener {
                 scanner.close();
             }
         }
-        if (VersionInteger > 115) {
+        if (VersionInteger > 116) {
             UpdateStatus = "There is a new update: v" + VersionString;
         }
-        else if (VersionInteger == 115) {
+        else if (VersionInteger == 116) {
             UpdateStatus = "You are using the latest version";
         }
         else {
@@ -345,24 +333,6 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @EventHandler
     public void onCitizensEnable(CitizensEnableEvent event) {
-        // ---------------------------------------------
-        // LEGACY CODE
-        // ---------------------------------------------
-        if (NPCMigrationNeeded) {
-            for (NPC npc: CitizensAPI.getNPCRegistry()) {
-                MetadataStore NPCData = npc.data();
-                String NPCMerchantVariant = NPCData.get("variant");
-                if (NPCMerchantVariant != null) {
-                    NPCMerchantVariant = NPCMerchantVariant.replace("shop", "shopkeeper");
-                    NPCData.remove("variant");
-                    NPCData.setPersistent("merchant_variant", NPCMerchantVariant);
-                    NPCData.setPersistent("merchant_id", npc.getName().toLowerCase());
-                    NPCData.remove("in_interaction");
-                    NPCData.remove("shop_type");
-                }
-            }
-        }
-        // ---------------------------------------------
         int NPCDeleted = 0;
         for (NPC npc: CitizensAPI.getNPCRegistry()) {
             MetadataStore NPCData = npc.data();
@@ -396,7 +366,7 @@ public class Plugin extends JavaPlugin implements Listener {
             }
         }
         getLogger().info("=============================================");
-        getLogger().info("Wandering Merchants v1.1.5");
+        getLogger().info("Wandering Merchants v1.1.6");
         getLogger().info("Made by MahinBro001238");
         getLogger().info("Licensed under the Apache License 2.0");
         getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
@@ -409,7 +379,7 @@ public class Plugin extends JavaPlugin implements Listener {
         getLogger().info("=============================================");
         if (MerchantCount == 0) {
             getLogger().info("No merchants are enabled in the config");
-            getLogger().info("Wandering Merchants will now disable itself.");
+            getLogger().info("Wandering Merchants will now disable itself");
             Bukkit.getPluginManager().disablePlugin(this);
         }
     }
@@ -509,11 +479,6 @@ public class Plugin extends JavaPlugin implements Listener {
                                 }
                                 else {
                                     ItemStack ItemInHand = player.getInventory().getItemInMainHand();
-                                    // ---------------------------------------------
-                                    // LEGACY CODE
-                                    // ---------------------------------------------
-                                    MigrateItem(ItemInHand);
-                                    // ---------------------------------------------
                                     ItemMeta ItemInHandItemMeta = ItemInHand.getItemMeta();
                                     if (ItemInHandItemMeta != null && MerchantData.ItemId.equals(ItemInHandItemMeta.getPersistentDataContainer().get(MerchantItemKey, PersistentDataType.STRING))) {
                                         ItemInHand.setAmount(ItemInHand.getAmount()-1);
@@ -569,31 +534,31 @@ public class Plugin extends JavaPlugin implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         InventoryHolder owner = event.getInventory().getHolder();
         if (owner instanceof InventoryOwner) {
-            NPC npc = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(((InventoryOwner) owner).owner.split(" ")[1]));
-            if (npc != null) {
-                MetadataStore NPCData = npc.data();
-                String NPCMerchantVariant = NPCData.get("merchant_variant");
-                if (NPCMerchantVariant.equals("stray") && ((InventoryOwner) owner).owner.split(" ")[2].equals(NPCMerchantVariant)) {
-                    int NPCMerchantViewers = (int) NPCData.get("merchant_viewers") - 1;
-                    NPCData.setPersistent("merchant_viewers", NPCMerchantViewers);
-                    if (NPCMerchantViewers == 0) {
-                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+            String OwnerString = ((InventoryOwner) owner).owner;
+            if (!OwnerString.equals("Wandering Merchants Item Crafting Recipe GUI")) {
+                NPC npc = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(OwnerString.split(" ")[1]));
+                if (npc != null) {
+                    MetadataStore NPCData = npc.data();
+                    String NPCMerchantVariant = NPCData.get("merchant_variant");
+                    if (NPCMerchantVariant.equals("stray") && ((InventoryOwner) owner).owner.split(" ")[2].equals(NPCMerchantVariant)) {
+                        int NPCMerchantViewers = (int) NPCData.get("merchant_viewers") - 1;
+                        NPCData.setPersistent("merchant_viewers", NPCMerchantViewers);
+                        if (NPCMerchantViewers == 0) {
+                            npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                        }
                     }
                 }
             }
         }
         else if (owner != null && owner.getClass().getSimpleName().equals("SellGUI")) {
-            Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-                @Override
-                public void run() {
-                    Player player = (Player) event.getPlayer();
-                    if (player.isOnline()) {
-                        if (player.hasMetadata("sellgui_permission_container")) {
-                            PermissionAttachment permission = (PermissionAttachment) player.getMetadata("sellgui_permission_container").get(0).value();
-                            player.removeAttachment(permission);
-                            player.removeMetadata("sellgui_permission_container", Plugin.this);
-                            player.recalculatePermissions();
-                        }
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                Player player = (Player) event.getPlayer();
+                if (player.isOnline()) {
+                    if (player.hasMetadata("sellgui_permission_container")) {
+                        PermissionAttachment permission = (PermissionAttachment) player.getMetadata("sellgui_permission_container").get(0).value();
+                        player.removeAttachment(permission);
+                        player.removeMetadata("sellgui_permission_container", Plugin.this);
+                        player.recalculatePermissions();
                     }
                 }
             }, SellGUIPermissionRevokeDelay);
@@ -606,32 +571,456 @@ public class Plugin extends JavaPlugin implements Listener {
             npc.destroy();
         }
     }
+    @EventHandler
+    public void OnPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (UpdateStatus.startsWith("There is a new update: v") && player.hasPermission("wanderingmerchants.wm")) {
+            player.sendMessage(Component.text("[Wandering Merchants] " + UpdateStatus, NamedTextColor.YELLOW));
+        }
+    }
     @Override
     public void onDisable() {
-        getLogger().info("Wandering Merchants v1.1.5 has been disabled");
+        getLogger().info("Wandering Merchants v1.1.6 has been disabled");
     }
-    // ---------------------------------------------
-    // LEGACY CODE
-    // ---------------------------------------------
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equals("migrate_item")) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage(Component.text("Only players can use this command"));
-                return true;
+        if (sender instanceof Player CommandExecutor) {
+            if (CommandExecutor.hasPermission("wanderingmerchants.wm")) {
+                if (args.length != 0) {
+                    if (args[0].equals("spawn")) {
+                        if (args.length == 2 || args.length == 3) {
+                            Merchant MerchantData = GetMerchantData(args[1]);
+                            if (MerchantData != null) {
+                                if (MerchantData.enabled) {
+                                    Player player;
+                                    if (args.length == 3) {
+                                        player = Bukkit.getPlayer(args[2]);
+                                    }
+                                    else {
+                                        player = CommandExecutor;
+                                    }
+                                    if (player != null) {
+                                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, MerchantData.name);
+                                        MetadataStore NPCData = npc.data();
+                                        NPCData.setPersistent("merchant_id", MerchantData.id);
+                                        NPCData.setPersistent("merchant_variant", "stray");
+                                        NPCData.setPersistent("merchant_viewers", 0);
+                                        NPCData.setPersistent("creation_time", System.currentTimeMillis());
+                                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                        npc.getOrAddTrait(LookClose.class).toggle();
+                                        if (MerchantData.glow) {
+                                            NPCData.setPersistent(NPC.Metadata.GLOWING, true);
+                                        }
+                                        npc.setProtected(false);
+                                        npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
+                                        npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
+                                        npc.spawn(player.getLocation());
+                                        if (MerchantData.SpawnText != null) {
+                                            player.sendMessage(MerchantData.SpawnText);
+                                        }
+                                        if (args.length == 3) {
+                                            CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + " at " + player.getName() + "'s location", NamedTextColor.GOLD));
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + "", NamedTextColor.GOLD));
+                                        }
+                                    }
+                                    else {
+                                        CommandExecutor.sendMessage(Component.text("Unknown player: " + args[2], NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("You cannot spawn disabled merchants", NamedTextColor.RED));
+                                }
+                            }
+                            else {
+                                CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[1], NamedTextColor.RED));
+                            }
+                        }
+                        else {
+                            CommandExecutor.sendMessage(Component.text("Usage: /wm spawn <merchant id> [player]", NamedTextColor.RED));
+                        }
+                    }
+                    else if (args[0].equals("give")) {
+                        if (args.length == 2 || args.length == 3) {
+                            Merchant MerchantData = GetMerchantData(args[1]);
+                            if (MerchantData != null) {
+                                Player player;
+                                if (args.length == 3) {
+                                    player = Bukkit.getPlayer(args[2]);
+                                }
+                                else {
+                                    player = CommandExecutor;
+                                }
+                                if (player != null) {
+                                    if (player.getInventory().addItem(MerchantData.item).isEmpty()) {
+                                        if (args.length == 3) {
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("Gave a ", NamedTextColor.GOLD)).append(MerchantData.ItemName).append(Component.text(" to " + player.getName() + "", NamedTextColor.GOLD)));
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("Gave a ", NamedTextColor.GOLD)).append(MerchantData.ItemName).append(Component.text("", NamedTextColor.GOLD)));
+                                        }
+                                    }
+                                    else {
+                                        if (args.length == 3) {
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("Cannot give ", NamedTextColor.RED)).append(MerchantData.ItemName).append(Component.text(" to " + player.getName() + ", their inventory is full", NamedTextColor.RED)));
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("Cannot give ", NamedTextColor.RED)).append(MerchantData.ItemName).append(Component.text(", your inventory is full", NamedTextColor.RED)));
+                                        }
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Unknown player: " + args[2], NamedTextColor.RED));
+                                }
+                            }
+                            else {
+                                CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[1], NamedTextColor.RED));
+                            }
+                        }
+                        else {
+                            CommandExecutor.sendMessage(Component.text("Usage: /wm give <merchant id> [player]", NamedTextColor.RED));
+                        }
+                    }
+                    else if (args[0].equals("recipe")) {
+                        if (args.length == 2 || args.length == 3) {
+                            Merchant MerchantData = GetMerchantData(args[1]);
+                            if (MerchantData != null) {
+                                Player player;
+                                if (args.length == 3) {
+                                    player = Bukkit.getPlayer(args[2]);
+                                }
+                                else {
+                                    player = CommandExecutor;
+                                }
+                                if (player != null) {
+                                    player.openInventory(MerchantData.ItemCraftingRecipeGUI);
+                                    if (args.length == 3) {
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Opened crafting recipe GUI of ", NamedTextColor.GOLD)).append(MerchantData.ItemName).append(Component.text(" for " + player.getName() + "", NamedTextColor.GOLD)));
+                                    }
+                                    else {
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Opened crafting recipe GUI of ", NamedTextColor.GOLD)).append(MerchantData.ItemName));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Unknown player: " + args[2], NamedTextColor.RED));
+                                }
+                            }
+                            else {
+                                CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[1], NamedTextColor.RED));
+                            }
+                        }
+                        else {
+                            CommandExecutor.sendMessage(Component.text("Usage: /wm recipe <merchant id> [player]", NamedTextColor.RED));
+                        }
+                    }
+                    else if (args[0].equals("get")) {
+                        if (args.length == 2 || args.length == 3) {
+                            if (args[1].equals("merchant_data")) {
+                                if (args.length == 3) {
+                                    Merchant MerchantData = GetMerchantData(args[2]);
+                                    if (MerchantData != null) {
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("--- Merchant Data ---", NamedTextColor.GOLD)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("ID: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.id)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Name: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.name)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shop: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.shop)));
+                                        String SkinValue = MerchantData.SkinValue;
+                                        if (SkinValue == null) {
+                                            SkinValue = "null";
+                                        }
+                                        else {
+                                            SkinValue = SkinValue.substring(0, 20) + "...";
+                                        }
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Skin Value: ", NamedTextColor.GOLD)).append(Component.text(SkinValue)));
+                                        String SkinSignature = MerchantData.SkinSignature;
+                                        if (SkinSignature == null) {
+                                            SkinSignature = "null";
+                                        }
+                                        else {
+                                            SkinSignature = SkinSignature.substring(0, 20) + "...";
+                                        }
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Skin Signature: ", NamedTextColor.GOLD)).append(Component.text(SkinSignature)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Default Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.DefaultDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Correct Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.CorrectItemDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Incorrect Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.IncorrectItemDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Follow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.FollowDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Non Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.NonShopkeeperUnfollowDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.ShopkeeperUnfollowDialogue));
+                                        Component SpawnText = MerchantData.SpawnText;
+                                        if (SpawnText == null) {
+                                            SpawnText = Component.text("null");
+                                        }
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Spawn Text: ", NamedTextColor.GOLD)).append(SpawnText));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Glow: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(MerchantData.glow))));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Item ID: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.ItemId)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Item Name: ", NamedTextColor.GOLD)).append(MerchantData.ItemName));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Item Custom Model Data: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.ItemCMDS)));
+                                        List<Component> ItemLore = MerchantData.ItemLore;
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Item Lore:", NamedTextColor.GOLD)));
+                                        for (int i = 0; i < ItemLore.size(); i++) {
+                                            CommandExecutor.sendMessage(ItemLore.get(i));
+                                        }
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Item Crafting Recipe: ", NamedTextColor.GOLD)).append(Component.text("[View Recipe]", NamedTextColor.AQUA).clickEvent(ClickEvent.runCommand("/wm recipe " + MerchantData.id))));
+                                        List<Component> ShopIconLore = MerchantData.ShopIconLore;
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shop Icon Material: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(MerchantData.ShopIconMaterial))));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shop Icon Name: ", NamedTextColor.GOLD)).append(MerchantData.ShopIconName));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shop Icon Lore:", NamedTextColor.GOLD)));
+                                        for (int i = 0; i < ShopIconLore.size(); i++) {
+                                            CommandExecutor.sendMessage(ShopIconLore.get(i));
+                                        }
+                                        List<Component> SellIconLore = MerchantData.SellIconLore;
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Sell Icon Material: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(MerchantData.SellIconMaterial))));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Sell Icon Name: ", NamedTextColor.GOLD)).append(MerchantData.SellIconName));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Sell Icon Lore:", NamedTextColor.GOLD)));
+                                        for (int i = 0; i < SellIconLore.size(); i++) {
+                                            CommandExecutor.sendMessage(SellIconLore.get(i));
+                                        }
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Enabled: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(MerchantData.enabled))));
+                                    }
+                                    else {
+                                        CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[2], NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Usage: /wm get merchant_data <merchant id>", NamedTextColor.RED));
+                                }
+                            }
+                            else if (args[1].equals("npc_data")) {
+                                if (args.length == 3) {
+                                    try {
+                                        NPC npc = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(args[2]));
+                                        if (npc != null) {
+                                            MetadataStore NPCData = npc.data();
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("--- NPC Data ---", NamedTextColor.GOLD)));
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("merchant_id: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf((Object) NPCData.get("merchant_id")))));
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("merchant_variant: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf((Object) NPCData.get("merchant_variant")))));
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("merchant_viewers: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf((Object) NPCData.get("merchant_viewers")))));
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("creation_time: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf((Object) NPCData.get("creation_time")))));
+                                            Entity following = npc.getOrAddTrait(FollowTrait.class).getFollowing();
+                                            String FollowingName;
+                                            if (following != null) {
+                                                FollowingName = following.getName();
+                                            }
+                                            else {
+                                                FollowingName = "null";
+                                            }
+                                            CommandExecutor.sendMessage(Component.empty().append(Component.text("Currently following: ", NamedTextColor.GOLD)).append(Component.text(FollowingName)));
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.text("Unknown NPC id: " + args[2], NamedTextColor.RED));
+                                        }
+                                    }
+                                    catch (Exception e) {
+                                        CommandExecutor.sendMessage(Component.text("Invalid NPC id: " + args[2] + ", " + e, NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Usage: /wm get npc_data <npc id>", NamedTextColor.RED));
+                                }
+                            }
+                            else if (args[1].equals("item_data")) {
+                                if (args.length == 2) {
+                                    ItemStack ItemInHand = CommandExecutor.getInventory().getItemInMainHand();
+                                    ItemMeta meta = ItemInHand.getItemMeta();
+                                    if (meta != null) {
+                                        String id = meta.getPersistentDataContainer().get(MerchantItemKey, PersistentDataType.STRING);
+                                        List<String> CMD = meta.getCustomModelDataComponent().getStrings();
+                                        String CMDS;
+                                        if (!CMD.isEmpty()) {
+                                            CMDS = CMD.get(0); 
+                                        }
+                                        else {
+                                            CMDS = "null";
+                                        }
+                                        CommandExecutor.sendMessage(Component.text("--- Item Data ---", NamedTextColor.GOLD));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("ID: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(id))));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Custom Model Data: ", NamedTextColor.GOLD)).append(Component.text(CMDS)));
+                                    }
+                                    else {
+                                        CommandExecutor.sendMessage(Component.text("Your hand is empty", NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Usage: /wm get item_data", NamedTextColor.RED));
+                                }
+                            }
+                            else {
+                                CommandExecutor.sendMessage(Component.text("Invalid subcommand: " + args[1], NamedTextColor.RED));
+                                CommandExecutor.sendMessage(Component.text("Usage: /wm get <merchant_data|npc_data|item_data>", NamedTextColor.RED));
+                            }
+                        }
+                        else {
+                            CommandExecutor.sendMessage(Component.text("Usage: /wm get <merchant_data|npc_data|item_data>", NamedTextColor.RED));
+                        }
+                    }
+                    else if (args[0].equals("set")) {
+                        if (args.length == 4 || args.length == 5) {
+                            if (args[1].equals("npc_data")) {
+                                if (args.length == 5) {
+                                    try {
+                                        NPC npc = CitizensAPI.getNPCRegistry().getById(Integer.parseInt(args[2]));
+                                        if (npc != null) {
+                                            MetadataStore NPCData = npc.data();
+                                            if (args[3].equals("merchant_id")) {
+                                                if (args[4].equals("NULL")) {
+                                                    NPCData.remove("merchant_id");
+                                                    CommandExecutor.sendMessage(Component.text("Removed merchant_id", NamedTextColor.GOLD));
+                                                }
+                                                else {
+                                                    NPCData.setPersistent("merchant_id", args[4]);
+                                                    CommandExecutor.sendMessage(Component.text("Set merchant_id to " + args[4], NamedTextColor.GOLD));
+                                                }
+                                            }
+                                            else if (args[3].equals("merchant_variant")) {
+                                                if (args[4].equals("stray") || args[4].equals("stray_moving") || args[4].equals("shopkeeper") || args[4].equals("shopkeeper_moving") || args[4].equals("NULL")) {
+                                                    if (args[4].equals("NULL")) {
+                                                        NPCData.remove("merchant_variant");
+                                                        CommandExecutor.sendMessage(Component.text("Removed merchant_variant", NamedTextColor.GOLD));
+                                                    }
+                                                    else {
+                                                        NPCData.setPersistent("merchant_variant", args[4]);
+                                                        CommandExecutor.sendMessage(Component.text("Set merchant_variant to " + args[4], NamedTextColor.GOLD));
+                                                    }
+                                                }
+                                                else {
+                                                    CommandExecutor.sendMessage(Component.text("Invalid merchant_variant: " + args[4], NamedTextColor.RED));
+                                                    CommandExecutor.sendMessage(Component.text("Usage: /wm set npc_data <npc id> <merchant_variant> <stray|stray_moving|shopkeeper|shopkeeper_moving|NULL>", NamedTextColor.RED));
+                                                }
+                                            }
+                                            else if (args[3].equals("merchant_viewers")) {
+                                                if (args[4].equals("NULL")) {
+                                                    NPCData.remove("merchant_viewers");
+                                                    CommandExecutor.sendMessage(Component.text("Removed merchant_viewers", NamedTextColor.GOLD));
+                                                }
+                                                else {
+                                                    try {
+                                                        NPCData.setPersistent("merchant_viewers", Integer.parseInt(args[4]));
+                                                        CommandExecutor.sendMessage(Component.text("Set merchant_viewers to: " + args[4], NamedTextColor.GOLD));
+                                                    }
+                                                    catch (Exception e) {
+                                                        CommandExecutor.sendMessage(Component.text("Invalid merchant_viewers: " + args[4], NamedTextColor.RED));
+                                                        CommandExecutor.sendMessage(Component.text("merchant_viewers must be a integer", NamedTextColor.RED));
+                                                    }
+                                                }
+                                            }
+                                            else if (args[3].equals("creation_time")) {
+                                                if (args[4].equals("NULL")) {
+                                                    NPCData.remove("creation_time");
+                                                    CommandExecutor.sendMessage(Component.text("Removed creation_time", NamedTextColor.GOLD));
+                                                }
+                                                else {
+                                                    try {
+                                                        NPCData.setPersistent("creation_time", Long.parseLong(args[4]));
+                                                        CommandExecutor.sendMessage(Component.text("Set creation_time to " + args[4], NamedTextColor.GOLD));
+                                                    }
+                                                    catch (Exception e) {
+                                                        CommandExecutor.sendMessage(Component.text("Invalid creation_time: " + args[4], NamedTextColor.RED));
+                                                        CommandExecutor.sendMessage(Component.text("creation_time must be a long", NamedTextColor.RED));
+                                                    }
+                                                }
+                                            }
+                                            else if (args[3].equals("following")) {
+                                                if (args[4].equals("NULL")) {
+                                                    npc.getOrAddTrait(FollowTrait.class).follow(null);
+                                                    CommandExecutor.sendMessage(Component.text("The NPC is no longer following anyone", NamedTextColor.GOLD));
+                                                }
+                                                else {
+                                                    Player player = Bukkit.getPlayer(args[4]);
+                                                    if (player != null) {
+                                                        npc.getOrAddTrait(FollowTrait.class).follow(player);
+                                                        CommandExecutor.sendMessage(Component.text("The NPC is now following " + player.getName() + "", NamedTextColor.GOLD));
+                                                    }
+                                                    else {
+                                                        CommandExecutor.sendMessage(Component.text("Unknown player: " + args[4], NamedTextColor.RED));
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                CommandExecutor.sendMessage(Component.text("Invalid subcommand: " + args[3], NamedTextColor.RED));
+                                                CommandExecutor.sendMessage(Component.text("Usage: /wm set npc_data <npc id> <merchant_id|merchant_variant|merchant_viewers|creation_time|following> <value|player|NULL>", NamedTextColor.RED));
+                                            }
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.text("Unknown NPC id: " + args[2], NamedTextColor.RED));
+                                        }
+                                    }
+                                    catch (Exception e) {
+                                        CommandExecutor.sendMessage(Component.text("Invalid NPC id: " + args[2], NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Usage: /wm set npc_data <npc id> <merchant_id|merchant_variant|merchant_viewers|creation_time|following> <value|player|NULL>", NamedTextColor.RED));
+                                }
+                            }
+                            else if (args[1].equals("item_data")) {
+                                if (args.length == 4) {
+                                    if (args[2].equals("id") || args[2].equals("cmd")) {
+                                        ItemStack ItemInHand = CommandExecutor.getInventory().getItemInMainHand();
+                                        ItemMeta meta = ItemInHand.getItemMeta();
+                                        if (meta != null) {
+                                            if (args[2].equals("id")) {
+                                                PersistentDataContainer PDC = meta.getPersistentDataContainer();
+                                                if (args[3].equals("NULL")) {
+                                                    PDC.remove(MerchantItemKey);
+                                                    CommandExecutor.sendMessage(Component.text("Removed item ID", NamedTextColor.GOLD));
+                                                }
+                                                else {
+                                                    PDC.set(MerchantItemKey, PersistentDataType.STRING, args[3]);
+                                                    CommandExecutor.sendMessage(Component.text("Item ID set to: " + args[3], NamedTextColor.GOLD));
+                                                }
+                                            }
+                                            else {
+                                                CustomModelDataComponent CMDS = meta.getCustomModelDataComponent();
+                                                if (args[3].equals("NULL")) {
+                                                    CMDS.setStrings(List.of());
+                                                    CommandExecutor.sendMessage(Component.text("Removed custom model data", NamedTextColor.GOLD));
+                                                }
+                                                else{
+                                                    CMDS.setStrings(List.of(args[3]));
+                                                    CommandExecutor.sendMessage(Component.text("Custom model data set to: " + args[3], NamedTextColor.GOLD));
+                                                }
+                                                meta.setCustomModelDataComponent(CMDS);
+                                            }
+                                            ItemInHand.setItemMeta(meta);
+                                        }
+                                        else {
+                                            CommandExecutor.sendMessage(Component.text("Your hand is empty", NamedTextColor.RED));
+                                        }
+                                    }
+                                    else {
+                                        CommandExecutor.sendMessage(Component.text("Invalid subcommand: " + args[2], NamedTextColor.RED));
+                                        CommandExecutor.sendMessage(Component.text("Usage: /wm set item_data <id|cmd> <value|NULL>", NamedTextColor.RED));
+                                    }
+                                }
+                                else {
+                                    CommandExecutor.sendMessage(Component.text("Usage: /wm set item_data <id|cmd> <value|NULL>", NamedTextColor.RED));
+                                }
+                            }
+                            else {
+                                CommandExecutor.sendMessage(Component.text("Invalid subcommand: " + args[1], NamedTextColor.RED));
+                                CommandExecutor.sendMessage(Component.text("Usage: /wm set <npc_data|item_data> <field> <value|NULL>", NamedTextColor.RED));
+                            }
+                        }
+                        else {
+                            CommandExecutor.sendMessage(Component.text("Usage: /wm set <npc_data|item_data> <field> <value|NULL>", NamedTextColor.RED));
+                        }
+                    }
+                    else {
+                        CommandExecutor.sendMessage(Component.text("Invalid subcommand: " + args[0], NamedTextColor.RED));
+                        CommandExecutor.sendMessage(Component.text("Usage: /wm <spawn|give|recipe|get|set>", NamedTextColor.RED));
+                    }
+                }
+                else {
+                    CommandExecutor.sendMessage(Component.text("Usage: /wm <spawn|give|recipe|get|set>", NamedTextColor.RED));
+                }
             }
-            ItemStack ItemInHand = player.getInventory().getItemInMainHand();
-            int result = MigrateItem(ItemInHand);
-            if (result == 0) {
-                player.sendMessage(Component.text("Item converted to the new format"));
-            } else if (result == 1) {
-                player.sendMessage(Component.text("This item is already in the new format"));
-            } else {
-                player.sendMessage(Component.text("This item is not a merchant item"));
+            else {
+                CommandExecutor.sendMessage(NoPermissionMessage);
             }
-            return true;
         }
-        return false;
+        else {
+            sender.sendMessage("This command can only be executed by a player");
+        }
+        return true;
     }
-    // ---------------------------------------------
 }
