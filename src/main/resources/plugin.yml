@@ -1,23 +1,17 @@
 name: WanderingMerchants
-version: 1.1.5
+version: 1.1.6
 main: com.mahin.Plugin
-api-version: 26.1.2
+api-version: 1.21.9
 description: An RPG plugin that spawns NPC merchants around players
 author: MahinBro001238
 website: https://github.com/MahinBro001238
 depend:
   - Citizens
   - EconomyShopGUI
-# ---------------------------------------------
-# LEGACY CODE
-# ---------------------------------------------
 permissions:
-  wanderingmerchants.migrate_item:
-    description: Allows converting legacy merchant items
-    default: true
+  wanderingmerchants.wm:
+    description: The permission needed to execute the /wm command
+    default: op
 commands:
-  migrate_item:
-    description: Converts an old merchant item in your hand to the new format
-    usage: /migrate_item
-    permission: wanderingmerchants.migrate_item
-# ---------------------------------------------
+  wm:
+    description: The Wandering Merchants main command
