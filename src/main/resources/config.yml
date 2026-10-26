@@ -1,5 +1,5 @@
 # =============================================
-# Wandering Merchants v1.1.5
+# Wandering Merchants v1.1.6
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
@@ -7,7 +7,7 @@
 # =============================================
 
 #DO NOT CHANGE THIS VALUE
-config_version: 2
+config_version: 3
 
 # Time between merchant spawns, in seconds
 # By default, a merchant can spawn once every hour
@@ -19,7 +19,7 @@ merchant_despawn_time: 600
 
 # How often the plugin checks for merchants that should despawn, in seconds
 # Warning: If this value is too high, merchants may stay longer than the specified despawn time
-# This should be less than the despawn time and divide evenly into it
+# This should be less than the despawn time and divide evenly into the despawn time
 merchant_despawn_check_frequency: 120
 
 # The radius (in blocks) around a random player within which a merchant can spawn
@@ -27,11 +27,15 @@ merchant_spawn_radius: 100
 
 # Note: This is an advanced field, do not change this unless you know what you are doing
 # The delay in (ticks) before the plugin revokes permission for using SellGUI
-# After closing the GUI. By default it is set to 1 tick
+# after closing the GUI. By default it is set to 1 tick
 # If your SellGUI is not working properly and it is saying
 # 'No items found which can be sold.', it means that the plugin is revoking the permission
-# Too fast. Try increasing the delay, it should fix the issue
+# too fast. Try increasing the delay, it should fix the issue
 sellgui_permission_revoke_delay: 1
+
+# The message sent to a player when they don't have the permission to execute /wm command
+# Supports MiniMessage formatting (e.g. "<bold>text</bold>", "<red>text</red>")
+no_permission_message: "<red>You don't have permission to use this command.</red>"
 
 # A list of all the merchants in the plugin
 # If you want to remove all merchants
@@ -39,6 +43,7 @@ sellgui_permission_revoke_delay: 1
 # merchants: null
 merchants:
 
+  # These indexes (0, 1, 2) does not matter, they do not need to be in ascending order
   0:
     # An ID (string) that is used by the plugin to identify this merchant
     # Warning: The ID must unique between all merchants and must not contain any spaces
@@ -46,7 +51,7 @@ merchants:
     # READ THIS CAREFULLY
 
     # Warning: This value cannot be changed. Changing this value will cause
-    # All merchant npcs with the old ID to be permanently deleted. Read the important
+    # all merchant npcs with the old ID to be permanently deleted. Read the important
     # notes below for more information
     id: garrick
 
@@ -58,11 +63,11 @@ merchants:
     # READ THIS CAREFULLY
 
     # Note: A page that leads to shop and shop itself is not the same
-    # For example, using the default configuration of EconomyShopGUI as reference
-    # The "Tools and Combat" page that leads to shops but the "Tools" page or "Weapons" page is a shop itself
+    # For example, using the default configuration of EconomyShopGUI as reference,
+    # the "Tools and Combat" page that leads to shops but the "Tools" page or "Weapons" page is a shop itself
 
     # For example if the shop can be opened using "/shop enchanting <player name>" through the console (not in-game)
-    # Then the value of this field will be "enchanting"
+    # then the value of this field will be "enchanting"
     # Warning: The value of this field must be the exact same as the one used in the "/shop <shop> <player name>" command in the console (not in-game)
     # Note: Before filling this field, try using "/shop <the shop name> <your in-game name>" through the console to check if it opens a shop or not
 
@@ -85,7 +90,7 @@ merchants:
     skin_signature: "vR3Z26c2O8pgqzG/PId9Mby0ykepa/Ve7JbHi/6w/j4NMwMb7jQiVeXm32JbJMFYvx+j/ldUniq6FJgdAZiJ4DgVsHQfWDmzaw//nqvwNGOFGNNyi+I2xOFk62t+CghQIWMgcclnDv94ybR8bsN0zXqoAOQCQ5KrzGFdQ3i5y/Wups19SabZ5s/66bBFpme8ycK4vK4qoZfvGviBtFc15NX0dHAy0O6IWRy4TQhU0J2Rf5rx+3+ZbnFnTbOdk/x1K6BvcJd6qPkgoHQPisZ2DAbPBxgSTWhoHpCrzIC7koiRLIbHgsZRlskdjPAA+lNxCdTPB4OB5QqXnT2rzqio1rm9rEKHLpyV4IWrQ3ijB5A2EvoLyLB3jZm9jlJaCC6yLoNfddfp+7ENpakKwfcvMo/xFitoMdQsMOj0X1z4f19mThlW0EBERu39X8Nq6oPCBlJ249iOj/QJHtV8mgzWlrtevfT0h5cJw3yfcte50QiBS2n54a+nlhX/KRSliCv6bc0HR0Wf0Cb7Y8ZOtNWA4r+M/x5kbszosb9KfTB3nShaYJjTjrIbQU61Fi8bJVVxfCZDl+6Zpkmj10vZuJsUqustanY4/MTHj8NZl2wQK68dFLH6LMBhxyIKbqRue1AmTT5Zws7n4PdQuEAiMbCv2sJOeqTQ+IlryIma0bJdalM="
 
     # The message the merchant says to a player when interacted with
-    # Supports MiniMessage formatting (e.g. "<bold>text</bold>", "<red>text</red>")
+    # Supports MiniMessage formatting
     default_dialogue: "Garrick: Lost my hatchet, lost my work. Bring it back, and I will keep you stocked with wood."
 
     # The message the merchant says when the player returns the correct item
@@ -136,7 +141,7 @@ merchants:
 
       # Add a custom model data to the item to apply a custom texture over it
       # Warning: Make sure to use unique model data for each item
-      # Otherwise the same texture may get applied to multiple items
+      # otherwise the same texture may get applied to multiple items
       # If you don't want to add a custom texture just set custom_model_data to be null
       custom_model_data: garricks_hatchet
 
@@ -151,7 +156,7 @@ merchants:
 
         # The items used in the recipe
         # Must be a valid material name
-        # Full list of materials: https://jd.papermc.io/paper/26.3/org/bukkit/Material.html
+        # Full list of materials: https://jd.papermc.io/paper/1.21.9/org/bukkit/Material.html
         ingredients:
           I: IRON_INGOT
           A: IRON_AXE
