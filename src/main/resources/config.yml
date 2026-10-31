@@ -1,5 +1,5 @@
 # =============================================
-# Wandering Merchants v1.1.6
+# Wandering Merchants v1.1.7
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
@@ -7,23 +7,13 @@
 # =============================================
 
 #DO NOT CHANGE THIS VALUE
-config_version: 3
-
-# Time between merchant spawns, in seconds
-# By default, a merchant can spawn once every hour
-merchant_spawn_frequency: 3600
-
-# Time before a merchant despawns if it has not been turned into a shopkeeper, in seconds
-# By default, merchants despawn after 10 minutes
-merchant_despawn_time: 600
+config_version: 3.1
 
 # How often the plugin checks for merchants that should despawn, in seconds
 # Warning: If this value is too high, merchants may stay longer than the specified despawn time
-# This should be less than the despawn time and divide evenly into the despawn time
+# This should be less than all the despawn time and divide evenly into all the despawn time
+# By default the plugins checks for merchants that should despawn every 2 minutes
 merchant_despawn_check_frequency: 120
-
-# The radius (in blocks) around a random player within which a merchant can spawn
-merchant_spawn_radius: 100
 
 # Note: This is an advanced field, do not change this unless you know what you are doing
 # The delay in (ticks) before the plugin revokes permission for using SellGUI
@@ -33,93 +23,258 @@ merchant_spawn_radius: 100
 # too fast. Try increasing the delay, it should fix the issue
 sellgui_permission_revoke_delay: 1
 
-# The message sent to a player when they don't have the permission to execute /wm command
-# Supports MiniMessage formatting (e.g. "<bold>text</bold>", "<red>text</red>")
-no_permission_message: "<red>You don't have permission to use this command.</red>"
+# Allow players to craft the item of a merchant in a world in which the merchant is not enabled
+allow_item_crafting_without_merchant: false
+
+# Whether to suppress the death message in chat when a merchant is killed
+suppress_merchant_death_message: true
+
+messages:
+
+  # The message sent to a player when they don't have the permission to execute /wm command
+  # Supports MiniMessage formatting (e.g. "<bold>text</bold>", "<red>text</red>")
+  no_permission: "<red>You don't have permission to use this command.</red>"
+
+  # Message sent to player when they try to craft a merchant item in a world where the merchant is not enabled
+  # Supports MiniMessage formatting
+  # If you don't want a message to be sent just set this field to null like
+  # item_crafting_not_allowed: null
+  item_crafting_not_allowed: "<red>You cannot craft this item here.</red>"
+
+# Commands to run when certain events occur
+# These commands are executed as the console after the event has completed
+# Available placeholders:
+#   %npc_id%            - the merchant NPC's Citizens ID
+#   %merchant_id%       - the merchant's ID
+#   %merchant_name%     - the merchant NPC's display name
+#   %merchant_variant%  - the merchant's variant
+#   %merchant_shop%     - the merchant's shop name
+#   %merchant_x%        - the merchant's X coordinate
+#   %merchant_y%        - the merchant's Y coordinate
+#   %merchant_z%        - the merchant's Z coordinate
+#   %player%            - the player associated with the event
+#   %player_x%          - the player's X coordinate
+#   %player_y%          - the player's Y coordinate
+#   %player_z%          - the player's Z coordinate
+#   %world%             - the world name
+# If you don't want any commands to run for an event, set it to null like
+#
+# on_spawn: null
+#
+# Otherwise add your commands like
+#
+# on_spawn:
+#   - "say %merchant_name% has appeared in %world%!"
+#   - "broadcast A merchant is here!"
+#
+# EVENTS SECTION IS UNDER DEVELOPMENT AND NOT USABLE IN VERSION 1.1.7
+# I added this section even though its not being used so that I don't have to migrate the config again
+# To learn about when this section becomes usable, make sure to read the release notes of future releases
+events:
+
+  # When a merchant spawns into a world
+  on_spawn: null
+
+  # When a merchant despawns due to its despawn timer
+  # Player related placeholders are not available for this event
+  on_despawn: null
+
+  # When a merchant is killed
+  # Player related placeholders are not available if the merchant was not killed by a player
+  on_kill: null
+
+  # When a merchant takes damage
+  on_damage: null
+
+  # When a player clicks on a merchant NPC
+  on_click: null
+
+  # When a non-shopkeeper merchant becomes a shopkeeper
+  on_convert_to_shopkeeper: null
+
+  # When a merchant is healed by a player
+  on_heal: null
+
+  # When a player crafts an item using a merchant's recipe
+  # Merchant related placeholders except %merchant_id% and %npc_id% are not available for this event
+  on_item_craft: null
+
+  # When a merchant begins following a player
+  on_follow_start: null
+
+  # When a merchant stops following a player
+  on_follow_stop: null
+
+# A list of all worlds merchants can spawn in
+# Nether and the end are not supported, only overworld worlds are supported
+# If you don't want merchants to spawn in any world, just set worlds to null
+worlds:
+
+  # The name of the world (the name of the default world is 'world')
+  world:
+
+    # How frequently should merchants spawn in this world
+    # By default, a merchant can spawn once every hour
+    merchant_spawn_frequency: 600
+
+    # List of all the merchants that can spawn in this world
+    # You must have atleast one merchant here
+    merchants:
+
+      # The ID of the merchant you defined in the merchants section below
+      sylphie:
+
+        # The chance of this merchant spawning
+        # Must be greater than or equal to 0
+        # The sum of all enabled merchants defined for this world must be greater than 0
+        # The chance of this merchant spawning relative to other merchants in this world
+        # Examples:
+        # i) Two merchants with rarity 1 and 1 have an equal chance spawn (50/50).
+        # ii) Two merchants with rarity 1 and 9 spawn with chances 10% and 90% respectively.
+        rarity: 1
+
+        # Determines the behaviour of this merchant
+        # true: everything will work as expected
+        # false: all NPCs of this merchant within this world will be despawn
+        # and the item of this merchant will no longer be craftable in this world
+        enabled: true
+
+        # Removing the entry of a merchant will cause all NPCs of that
+        # merchant to be permanently deleted from that world
+
+      bruna:
+        rarity: 1
+        enabled: true
+      mara:
+        rarity: 1
+        enabled: true
+      dorian:
+        rarity: 1
+        enabled: true
+      marcus:
+        rarity: 1
+        enabled: true
+      edmund:
+        rarity: 1
+        enabled: true
+      gordan:
+        rarity: 1
+        enabled: true
+      seraphim:
+        rarity: 1
+        enabled: true
+      edward:
+        rarity: 1
+        enabled: true
+      rowena:
+        rarity: 1
+        enabled: true
+      leo:
+        rarity: 1
+        enabled: true
+      garrick:
+        rarity: 1
+        enabled: true
+      luna:
+        rarity: 1
+        enabled: true
+      ash:
+        rarity: 1
+        enabled: true
+      nox:
+        rarity: 1
+        enabled: true
+      lyra:
+        rarity: 1
+        enabled: true
+      flora:
+        rarity: 1
+        enabled: true
+      jasper:
+        rarity: 1
+        enabled: true
+      rufus:
+        rarity: 1
+        enabled: true
 
 # A list of all the merchants in the plugin
 # If you want to remove all merchants
-# Just set merchants to be null like
-# merchants: null
+# Just set merchants to be null
 merchants:
 
-  # These indexes (0, 1, 2) does not matter, they do not need to be in ascending order
-  0:
-    # An ID (string) that is used by the plugin to identify this merchant
-    # Warning: The ID must unique between all merchants and must not contain any spaces
+  # An ID (string) that is used by the plugin to identify this merchant
+  # Warning: The ID must unique between all merchants and must not contain any spaces
 
-    # READ THIS CAREFULLY
+  # READ THIS CAREFULLY
 
-    # Warning: This value cannot be changed. Changing this value will cause
-    # all merchant npcs with the old ID to be permanently deleted. Read the important
-    # notes below for more information
-    id: garrick
+  # Warning: This value cannot be changed. Changing this value will cause
+  # unexpected behaviour for merchant NPCs with this ID
+  sylphie:
 
     # The name of the merchant
-    name: Garrick
+    name: Sylphie
 
     # The name of the shop of EconomyShopGUI that the merchant would open
-
     # READ THIS CAREFULLY
-
     # Note: A page that leads to shop and shop itself is not the same
     # For example, using the default configuration of EconomyShopGUI as reference,
     # the "Tools and Combat" page that leads to shops but the "Tools" page or "Weapons" page is a shop itself
-
     # For example if the shop can be opened using "/shop enchanting <player name>" through the console (not in-game)
     # then the value of this field will be "enchanting"
     # Warning: The value of this field must be the exact same as the one used in the "/shop <shop> <player name>" command in the console (not in-game)
     # Note: Before filling this field, try using "/shop <the shop name> <your in-game name>" through the console to check if it opens a shop or not
-
     # If you want to see all the shops available in your server then you can do so by visualising the permissions of shops through LuckPerms
     # Open a LuckPerms web editor using "/lp editor"
     # Then in the permissions field type "economyshopgui.shop."
     # And the web editor should bring up all the permissions of the available shops
     # If it brings up "economyshopgui.shop.enchanting" then your shop name should be "enchanting"
     # Note: "economyshopgui.shop.all" does not mean there is a shop named "all", it is just a permission that allows players to use all the shops
-    shop: wood
+    shop: enchanting
 
     # If you have found a skin and want to apply it to a merchant
     # Download that skin and generate the value and signature on mineskin.org and paste them here
-    # If you don't want a custom skin just set the values of skin_value and skin_signature to null like
-    # skin_value: null
-    # skin_signature: null
+    # If you don't want a custom skin just set the values of skin_value and skin_signature to null
     # Warning: Make sure to use quotes around skin_value and skin_signature as they contain
     # Special characters that would break the YAML parser without them
-    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxMjU4ODQ0NzM1NCwKICAicHJvZmlsZUlkIiA6ICI5OTdjZjFlMmY1NGQ0YzEyOWY2ZjU5ZTVlNjU1YjZmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbzEyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMwMGIxMDhhMzBiYWYyYjAyYmYzZGI0OTJjY2U4MmM5MDJhZTQwNGVmN2VkYWQ5YTc4NzlhNmFiNmQ2ZDcxZDciCiAgICB9CiAgfQp9"
-    skin_signature: "vR3Z26c2O8pgqzG/PId9Mby0ykepa/Ve7JbHi/6w/j4NMwMb7jQiVeXm32JbJMFYvx+j/ldUniq6FJgdAZiJ4DgVsHQfWDmzaw//nqvwNGOFGNNyi+I2xOFk62t+CghQIWMgcclnDv94ybR8bsN0zXqoAOQCQ5KrzGFdQ3i5y/Wups19SabZ5s/66bBFpme8ycK4vK4qoZfvGviBtFc15NX0dHAy0O6IWRy4TQhU0J2Rf5rx+3+ZbnFnTbOdk/x1K6BvcJd6qPkgoHQPisZ2DAbPBxgSTWhoHpCrzIC7koiRLIbHgsZRlskdjPAA+lNxCdTPB4OB5QqXnT2rzqio1rm9rEKHLpyV4IWrQ3ijB5A2EvoLyLB3jZm9jlJaCC6yLoNfddfp+7ENpakKwfcvMo/xFitoMdQsMOj0X1z4f19mThlW0EBERu39X8Nq6oPCBlJ249iOj/QJHtV8mgzWlrtevfT0h5cJw3yfcte50QiBS2n54a+nlhX/KRSliCv6bc0HR0Wf0Cb7Y8ZOtNWA4r+M/x5kbszosb9KfTB3nShaYJjTjrIbQU61Fi8bJVVxfCZDl+6Zpkmj10vZuJsUqustanY4/MTHj8NZl2wQK68dFLH6LMBhxyIKbqRue1AmTT5Zws7n4PdQuEAiMbCv2sJOeqTQ+IlryIma0bJdalM="
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3OTYwNzg4ODU1MSwKICAicHJvZmlsZUlkIiA6ICJmMTBmYjBlNTkxOTE0YmZhYjIzMDU1NGFlMTc2ZWFlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeHN0aWNEYXZlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FmMThjZGRlY2ZlZWY5NTRmOWQ2NWJhNmU2ZjRmZThiYTNiNDEwNTVhOTlhODE5NDg2Y2Q4NTY5ZGIzY2JhMjciCiAgICB9CiAgfQp9"
+    skin_signature: "ow2svmIre0SIB9PEd5xJn9PIC7XxTN5gRW3x41RTw7YzEYcnuITT57H8AmohChUiVyC9TO2LqyUUr0dv7R5i/e8jiGLamN11FmZBo+T3jQnAQsofDXNMAyax5dN5QEIyUkTFfGMLZSrz0khL4V51DsAIeWtgLRpTynROk5qNgJhhthIrube9rpSRSNSy1PMMnra+m5AOeFZcJn18ookDZmJWBk4zFm0RVnuMzKE+l+NCBdiz7g4rDQgBlWo2vu/oqXX1KJ/MV7BlFuyypoTZuMu9226zTNu2HCTgCoZKo5YH6r4MffubMyfKWl0bCvs3k4R8MZGurclw6X5QWR1dkDdOQUbD13y6lOPdQqL+R2R0h1SpcVJpD2i7+9LAhiqsAvE0lV6k0ACsrnW6qaraZL/sRAdiiUNTLuOqSoyPWeju/JgpjMZpRhBoJSBUZXLefNt0uua6229oZ14iFIpBHcLyJKDPeOJCbwdavDRfP8wIzUIvfGIve+c0TzRORTPtJyKnPqGuIhXOtOwNWyDkZ4CnqWG0Mcc9zP5zXR4bsjUmJJ23gSnkRu8LLorz6rHd8BScKgEoqWmF3myJULuKfeAhTlKbKTOx0b2huG15UuvnwBsiWyeDc14iTQoXFMjI8mTcbdR09IVX3HSow+sncDOYqRTgpwB6Hy5uPgB2FOc="
 
     # The message the merchant says to a player when interacted with
     # Supports MiniMessage formatting
-    default_dialogue: "Garrick: Lost my hatchet, lost my work. Bring it back, and I will keep you stocked with wood."
+    default_dialogue: "Sylphie: I am Sylphie, keeper of enchanted knowledge. Return my grimoire to me, and I shall weave enchantments for those who are worthy enough to wield them"
 
     # The message the merchant says when the player returns the correct item
     # Supports MiniMessage formatting
-    correct_item_dialogue: "Garrick: There it is! You have my thanks, friend. I will not forget this."
+    correct_item_dialogue: "Sylphie: My grimoire returns to me. You have done well; its enchanted knowledge shall serve us both."
 
     # The message the merchant says when the player brings the incorrect item
     # Supports MiniMessage formatting
-    incorrect_item_dialogue: "Garrick: No, that is not what I asked for. Try again and bring me the right item."
+    incorrect_item_dialogue: "Sylphie: No, this is not what I requested. Bring me the correct item, please."
 
     # The message the merchants says to the player when its already in another interaction
-
     # The message the merchant says to the player when it starts following the player
-    follow_dialogue: "Garrick: So, where are we headed, friend? Lead the way."
+    follow_dialogue: "Sylphie: Very well, seeker. Lead on; the world is full of secrets waiting to be uncovered."
 
     # The message the non-shopkeeper varaint of the merchant says to a player when it stops following the player
-    non_shopkeeper_unfollow_dialogue: "Garrick: Well, this is where we part ways. Thanks for the company, friend!"
+    non_shopkeeper_unfollow_dialogue: "Sylphie: Our paths part here. I must return to my studies and hidden workings."
 
     # The message the shopkeeper varaint of the merchant says to a player when it stops following the player
-    shopkeeper_unfollow_dialogue: "Garrick: All right, I'll stay put here. Come back when you need wood or a good tool."
+    shopkeeper_unfollow_dialogue: "Sylphie: I shall remain here. Return when you seek enchanted knowledge."
 
     # The message sent to a player when this merchant spawns near them
     # Supports MiniMessage formatting
     # If you don't want such message just set spawn_text to null
-    spawn_text: <gray><italic>Hm... I hear the sound of an axe chopping wood nearby</italic></gray>
-    
+    spawn_text: <gray><italic>Hm... I spot a strange glow flickering nearby</italic></gray>
+
     # Whether the merchant should unitially glow when it spawns
     glow: true
 
+    # The radius (in blocks) around a random player within which the merchant can spawn
+    spawn_radius: 100
+
+    # Time (in seconds) before the merchant despawns if it has not been turned into a shopkeeper
+    # By default, the merchant despawns after 10 minutes
+    despawn_time: 600
 
     # The item that must be given to a merchant to turn it into a shopkeeper
     item:
@@ -127,61 +282,61 @@ merchants:
       # An ID (string) that is used by the plugin to identify this item
       # Warning: Changing this ID will cause all items with the previous ID to not be accepted by the merchant
       # Warning: You must use a unique ID for all id fields
-      id: garricks_hatchet
+      id: sylphies_grimoire
 
       # The name of the item
       # Supports MiniMessage formatting
-      name: Garrick's Hatchet
+      name: Sylphie's Grimoire
 
       # Add custom lore to the item
       # Supports multi-line lore with MiniMessage formatting
       # If you don't want to add lore, just set lore to be null
       lore:
-        - Hand this to Garrick
+        - Hand this to Sylphie
 
       # Add a custom model data to the item to apply a custom texture over it
       # Warning: Make sure to use unique model data for each item
       # otherwise the same texture may get applied to multiple items
       # If you don't want to add a custom texture just set custom_model_data to be null
-      custom_model_data: garricks_hatchet
+      custom_model_data: sylphies_grimoire
 
       # The crafting recipe of the item
       recipe:
 
         # The actual shape of the recipe
         shape:
-          - III
-          - IAI
-          - III
+          - GBG
+          - BGB
+          - GBG
 
         # The items used in the recipe
         # Must be a valid material name
         # Full list of materials: https://jd.papermc.io/paper/1.21.9/org/bukkit/Material.html
         ingredients:
-          I: IRON_INGOT
-          A: IRON_AXE
+          G: GLOWSTONE_DUST
+          B: BOOK
 
     # The item in the merchant's GUI which upon clicking leads to the actual shop
     shop_icon:
 
       # The material of the item
       # Must be a valid material name
-      material: OAK_LOG
+      material: ENCHANTED_BOOK
 
       # The name of the item
       # Supports MiniMessage formatting
-      name: Buy wood
+      name: Enchanted books
 
       # Lore of the item
       lore:
-        - Buy wood related items
+        - Buy enchanted books
 
     # The item in the merchant's GUI which upon clicking leads to the SellGUI
-    sell_icon:
+    sellgui_icon:
 
       # The material of the item
       # Must be a valid material name
-      material: IRON_AXE
+      material: ENCHANTED_BOOK
 
       # The name of the item
       # Supports MiniMessage formatting
@@ -189,24 +344,15 @@ merchants:
 
       # Lore of the item
       lore:
-        - Sell wood items in one go
-
-    # Whether this merchant is enabled
-    # true: merchant will spawn and can be interacted with normally
-    # false: merchant will not spawn, any existing npc of this merchant will be despawned
-    # And the item of this merchant will not be craftable
-    enabled: true
+        - Sell enchanting related items in one go
 
   # IMPORTANT NOTES
   # Cosmetic changes to an merchant item (name, lore, etc.) only apply to newly crafted versions of that merchant item
   # The old items of that merchant item will keep their old appearance, but it will still be accepted by the merchant
   # As long as they have the same ID
   # Cosmetic changes to a merchant (name, dialogue, skin, etc.) apply to all existing NPCs of that merchant not just new NPCs of that merchant
-  # To permanently remove a merchant, delete its entire entry from this config
-  # The plugin will automatically permanently delete any NPC whose id is no longer present in the config
 
-  1:
-    id: bruna
+  bruna:
     name: Bruna
     shop: stone
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3NzQ1NzIwMjIyNSwKICAicHJvZmlsZUlkIiA6ICJiYzRlZGZiNWYzNmM0OGE3YWM5ZjFhMzlkYzIzZjRmOCIsCiAgInByb2ZpbGVOYW1lIiA6ICI4YWNhNjgwYjIyNDYxMzQwIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzUxZTg1MzdhZTA2Yzg5NzZhMDY5YjdkMzhjZmUxY2E4MjE3ZTE4OTlkYmY0MzA5YmU4NjkyNDc1ZDZmOTk3OTAiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
@@ -219,6 +365,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Bruna: Right, I'll wait here. Come by when you need stone or something carved."
     spawn_text: <gray><italic>Hm... I hear chisels tapping against stone nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: brunas_stonecutter
       name: Bruna's Stonecutter
@@ -240,14 +388,12 @@ merchants:
       name: Buy stone
       lore:
         - Buy stone related items
-    sell_icon:
+    sellgui_icon:
       material: STONECUTTER
       name: Sell items
       lore:
         - Sell stone items in one go
-    enabled: true
-  2:
-    id: mara
+  mara:
     name: Mara
     shop: natural
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzA3NjY5NDkxNiwKICAicHJvZmlsZUlkIiA6ICI0YmEzMzMxNjA0YjU0NzgwYmQ0MzBkMTc5NjI4Yjk0YSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ1bnNwZW5kaW5nIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzFiNjU0NGFhMWI5MjkyM2M1N2IzMWYxYmZjMTZhOGNiNjg2NjVjYTMwMTUxZWY3NzE3YjBiN2I2MjQzM2NlMjkiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
@@ -260,6 +406,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Mara: I'll set up here, then. Come back when you need natural blocks or supplies."
     spawn_text: <gray><italic>Hm... I can hear someone digging nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: maras_trowel
       name: Mara's Trowel
@@ -281,14 +429,12 @@ merchants:
       name: Buy natural blocks
       lore:
         - Buy natural blocks from all biomes
-    sell_icon:
+    sellgui_icon:
       material: SAND
       name: Sell items
       lore:
         - Sell natural blocks in one go
-    enabled: true
-  3:
-    id: dorian
+  dorian:
     name: Dorian
     shop: decorative_blocks
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzA3ODA1MDY1MSwKICAicHJvZmlsZUlkIiA6ICI2N2M1NzUxMzY1Mzg0MWJjYTQ1MTkwY2IyZGFiMWEwOSIsCiAgInByb2ZpbGVOYW1lIiA6ICJuaXRlc3RhbGtlcjg3IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2M5NDg3ZjA3Y2Y3OGJmNGIwN2JjNzRlZWE1ZDA4MDU5ZTk4M2RlMjQ2ZjI3NjI2MGMxNjhiNGFmMmQ4NzViNDIiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
@@ -301,6 +447,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Dorian: Very well, I shall remain here. Return when your eye for beauty needs satisfying."
     spawn_text: <gray><italic>Hm... Someone nearby seems to be working with colourful blocks</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: dorians_palette
       name: Dorian's Palette
@@ -322,14 +470,12 @@ merchants:
       name: Buy decorative blocks
       lore:
         - Buy coloured glass, concrete, terracotta and more
-    sell_icon:
+    sellgui_icon:
       material: TERRACOTTA
       name: Sell items
       lore:
         - Sell decorative blocks in one go
-    enabled: true
-  4:
-    id: marcus
+  marcus:
     name: Marcus
     shop: resources
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc1MjAwMDMxMTkwMCwKICAicHJvZmlsZUlkIiA6ICI1NzI1YWJkMzY4MGI0MWVlOWJjMzhhNmUyM2M5OGNiMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJBYmVuZHJlZ2VuXyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8zOWU3Yjg4ZTQ2MmVmZmYwYWVkNDlmZTZiODQwNzc5ODE1ZDZkOTE3YmZlYTA3NzQzMGJmYjIwNGZhYzY3ZTIzIgogICAgfQogIH0KfQ=="
@@ -342,6 +488,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Marcus: I shall remain here. Return when you're ready to do business."
     spawn_text: <gray><italic>Hm... Someone nearby seems to be trading in valuable resources</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: marcuss_charm
       name: Marcus's Charm
@@ -362,14 +510,12 @@ merchants:
       name: Buy resources
       lore:
         - Buy valuable resources
-    sell_icon:
+    sellgui_icon:
       material: GOLD_INGOT
       name: Sell items
       lore:
         - Sell resource in one go
-    enabled: true
-  5:
-    id: edmund
+  edmund:
     name: Edmund
     shop: crops
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTczMTA3NTM5NTk5NywKICAicHJvZmlsZUlkIiA6ICIzMzU3MWJiY2UyMDE0MTRiYmNkMDYyMjEyZTI4MjBlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUaGFkb21JbmF0b3I0NzgiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTRiMDY1MWZmZTc4NjI3N2Y1YzQ2ZDA0MmUzMjk5MmQxODEzZThmYTIwMGZiZTY0N2U3ZTExNzU1NTQ0ZjAxMCIKICAgIH0KICB9Cn0="
@@ -382,6 +528,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Edmund: I'll stay here for now. Come by when you need crops or farming supplies."
     spawn_text: <gray><italic>Hm... I can smell freshly harvested crops nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: edmunds_seed_pouch
       name: Edmund's Seed Pouch
@@ -402,14 +550,12 @@ merchants:
       name: Buy crops
       lore:
         - Buy seeds, crops and farming supplies
-    sell_icon:
+    sellgui_icon:
       material: CARROT
       name: Sell items
       lore:
         - Sell crops in one go
-    enabled: true
-  6:
-    id: gordan
+  gordan:
     name: Gordan
     shop: food
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNzMwMDU2MzQ4OCwKICAicHJvZmlsZUlkIiA6ICIzOWEzOTMzZWE4MjU0OGU3ODQwNzQ1YzBjNGY3MjU2ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJkZW1pbmVjcmFmdGVybG9sIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzRjZjQ3OTQ1OGIxZjFmNDNlMzQxMzI3MDllNmZjNjM5Yzg5NzhiMzNmOWViMmU0YTg2M2E1MzJiNTViMTYxZjIiCiAgICB9CiAgfQp9"
@@ -422,6 +568,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Gordan: I'll stay here and keep the food coming. Come back hungry, friend!"
     spawn_text: <gray><italic>Hm... Something delicious seems to be cooking nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: gordans_butcher_knife
       name: Gordan's Butcher Knife
@@ -441,14 +589,12 @@ merchants:
       name: Buy food
       lore:
         - Buy meat and food supplies
-    sell_icon:
+    sellgui_icon:
       material: BEEF
       name: Sell items
       lore:
         - Sell meat in one go
-    enabled: true
-  7:
-    id: seraphim
+  seraphim:
     name: Seraphim
     shop: tools
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTcxMjM4MDEwMTk4NCwKICAicHJvZmlsZUlkIiA6ICI4ZTZlM2E4ZjRmYjA0NjhlOGQ5MTU5YmU3ZDYxYzRmNSIsCiAgInByb2ZpbGVOYW1lIiA6ICAiR3Vpb2xobzY3OCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9lYmMyYjAwMzI2MGE1ZGE1ZDNhNzVjNDg2ZWQyYjhlYzRmOGQ5M2RiNzg4MjUyYWQ5ZGMyNWY4ZTc0NWRlY2RjIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
@@ -461,6 +607,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Seraphim: I'll stay here. Come back when you need a dependable tool."
     spawn_text: <gray><italic>Hm... I hear metal clanging from a workshop nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: seraphims_anvil
       name: Seraphim's Anvil
@@ -481,14 +629,12 @@ merchants:
       name: Buy tools
       lore:
         - Buy tools and equipment
-    sell_icon:
+    sellgui_icon:
       material: IRON_INGOT
       name: Sell items
       lore:
         - Sell tools in one go
-    enabled: true
-  8:
-    id: edward
+  edward:
     name: Edward
     shop: weapons
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYyMzA2MTMyNTc2NywKICAicHJvZmlsZUlkIiA6ICJjNTBhZmE4YWJlYjk0ZTQ1OTRiZjFiNDI1YTk4MGYwMiIsCiAgInByb2ZpbGVOYW1lIiA6ICJUd29FQmFlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzIzMTUwNTNhN2MzNWMzMGY0MjhiOGNkZjk0ZGJlZjlmMmY3YzBhZDRhYzEyYzUwNWE2YTVjODZkYzNjMTlhNDEiCiAgICB9CiAgfQp9"
@@ -501,6 +647,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Edward: I'll remain here. Return when you're ready to arm yourself."
     spawn_text: <gray><italic>Hm... I hear a hammer ringing against metal nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: edwards_smithing_table
       name: Edward's Smithing Table
@@ -521,14 +669,12 @@ merchants:
       name: Buy weapons
       lore:
         - Buy swords, axes and more
-    sell_icon:
+    sellgui_icon:
       material: IRON_AXE
       name: Sell items
       lore:
         - Sell weapons in one go
-    enabled: true
-  9:
-    id: rowena
+  rowena:
     name: Rowena
     shop: armor
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzEyNTMyNjE5OCwKICAicHJvZmlsZUlkIiA6ICI0OWIzODUyNDdhMWY0NTM3YjBmN2MwZTFmMTVjMTc2NCIsCiAgInByb2ZpbGVOYW1lIiA6ICJiY2QyMDMzYzYzZWM0YmY4IiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2UzMDEwNjljYWMxMDcwNTYyYWZjYTFjZWE2MTFhMTVkYTc3ZjU0ZDIwOTlkZmJiZGQ1OWIzMzg0MmJiY2NmNGUiCiAgICB9CiAgfQp9"
@@ -541,6 +687,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Rowena: I'll stay here, dear. Come back when you need armor or protection."
     spawn_text: <gray><italic>Hm... I can smell smoke coming from a forge nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: rowenas_bellows
       name: Rowena's Bellows
@@ -561,14 +709,12 @@ merchants:
       name: Buy armor
       lore:
         - Buy armor and protection
-    sell_icon:
+    sellgui_icon:
       material: IRON_INGOT
       name: Sell items
       lore:
         - Sell armor in one go
-    enabled: true
-  10:
-    id: leo
+  leo:
     name: Leo
     shop: redstone
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYzNjE4MzE3MDYyNywKICAicHJvZmlsZUlkIiA6ICJmMTA0NzMxZjljYTU0NmI0OTkzNjM4NTlkZWY5N2NjNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6aWFkODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMmYzYjcwNWM2MGI0M2QzOTM1YzRhYjVhYzgxMmRjYjhhZTBkZTVmNmYzNDRhYTViN2JjYTg2N2ZjMGJiOTIyNyIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
@@ -581,6 +727,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Leo: I'll wait here. Come back when you need redstone components."
     spawn_text: <gray><italic>Hm... I hear the faint clicking of redstone mechanisms nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: leos_measuring_compass
       name: Leo's Measuring Compass
@@ -601,53 +749,51 @@ merchants:
       name: Buy redstone
       lore:
         - Buy redstone components and supplies
-    sell_icon:
+    sellgui_icon:
       material: REDSTONE_TORCH
       name: Sell items
       lore:
         - Sell redstone items in one go
-    enabled: true
-  11:
-    id: sylphie
-    name: Sylphie
-    shop: enchanting
-    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3OTYwNzg4ODU1MSwKICAicHJvZmlsZUlkIiA6ICJmMTBmYjBlNTkxOTE0YmZhYjIzMDU1NGFlMTc2ZWFlMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJNeHN0aWNEYXZlIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlL2FmMThjZGRlY2ZlZWY5NTRmOWQ2NWJhNmU2ZjRmZThiYTNiNDEwNTVhOTlhODE5NDg2Y2Q4NTY5ZGIzY2JhMjciCiAgICB9CiAgfQp9"
-    skin_signature: "ow2svmIre0SIB9PEd5xJn9PIC7XxTN5gRW3x41RTw7YzEYcnuITT57H8AmohChUiVyC9TO2LqyUUr0dv7R5i/e8jiGLamN11FmZBo+T3jQnAQsofDXNMAyax5dN5QEIyUkTFfGMLZSrz0khL4V51DsAIeWtgLRpTynROk5qNgJhhthIrube9rpSRSNSy1PMMnra+m5AOeFZcJn18ookDZmJWBk4zFm0RVnuMzKE+l+NCBdiz7g4rDQgBlWo2vu/oqXX1KJ/MV7BlFuyypoTZuMu9226zTNu2HCTgCoZKo5YH6r4MffubMyfKWl0bCvs3k4R8MZGurclw6X5QWR1dkDdOQUbD13y6lOPdQqL+R2R0h1SpcVJpD2i7+9LAhiqsAvE0lV6k0ACsrnW6qaraZL/sRAdiiUNTLuOqSoyPWeju/JgpjMZpRhBoJSBUZXLefNt0uua6229oZ14iFIpBHcLyJKDPeOJCbwdavDRfP8wIzUIvfGIve+c0TzRORTPtJyKnPqGuIhXOtOwNWyDkZ4CnqWG0Mcc9zP5zXR4bsjUmJJ23gSnkRu8LLorz6rHd8BScKgEoqWmF3myJULuKfeAhTlKbKTOx0b2huG15UuvnwBsiWyeDc14iTQoXFMjI8mTcbdR09IVX3HSow+sncDOYqRTgpwB6Hy5uPgB2FOc="
-    default_dialogue: "Sylphie: I am Sylphie, keeper of enchanted knowledge. Return my grimoire to me, and I shall weave enchantments for those who are worthy enough to wield them"
-    correct_item_dialogue: "Sylphie: My grimoire returns to me. You have done well; its enchanted knowledge shall serve us both."
-    incorrect_item_dialogue: "Sylphie: No, this is not what I requested. Bring me the correct item, please."
-    follow_dialogue: "Sylphie: Very well, seeker. Lead on; the world is full of secrets waiting to be uncovered."
-    non_shopkeeper_unfollow_dialogue: "Sylphie: Our paths part here. I must return to my studies and hidden workings."
-    shopkeeper_unfollow_dialogue: "Sylphie: I shall remain here. Return when you seek enchanted knowledge."
-    spawn_text: <gray><italic>Hm... I spot a strange glow flickering nearby</italic></gray>
+  garrick:
+    name: Garrick
+    shop: wood
+    skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxMjU4ODQ0NzM1NCwKICAicHJvZmlsZUlkIiA6ICI5OTdjZjFlMmY1NGQ0YzEyOWY2ZjU5ZTVlNjU1YjZmNyIsCiAgInByb2ZpbGVOYW1lIiA6ICJpbzEyIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzMwMGIxMDhhMzBiYWYyYjAyYmYzZGI0OTJjY2U4MmM5MDJhZTQwNGVmN2VkYWQ5YTc4NzlhNmFiNmQ2ZDcxZDciCiAgICB9CiAgfQp9"
+    skin_signature: "vR3Z26c2O8pgqzG/PId9Mby0ykepa/Ve7JbHi/6w/j4NMwMb7jQiVeXm32JbJMFYvx+j/ldUniq6FJgdAZiJ4DgVsHQfWDmzaw//nqvwNGOFGNNyi+I2xOFk62t+CghQIWMgcclnDv94ybR8bsN0zXqoAOQCQ5KrzGFdQ3i5y/Wups19SabZ5s/66bBFpme8ycK4vK4qoZfvGviBtFc15NX0dHAy0O6IWRy4TQhU0J2Rf5rx+3+ZbnFnTbOdk/x1K6BvcJd6qPkgoHQPisZ2DAbPBxgSTWhoHpCrzIC7koiRLIbHgsZRlskdjPAA+lNxCdTPB4OB5QqXnT2rzqio1rm9rEKHLpyV4IWrQ3ijB5A2EvoLyLB3jZm9jlJaCC6yLoNfddfp+7ENpakKwfcvMo/xFitoMdQsMOj0X1z4f19mThlW0EBERu39X8Nq6oPCBlJ249iOj/QJHtV8mgzWlrtevfT0h5cJw3yfcte50QiBS2n54a+nlhX/KRSliCv6bc0HR0Wf0Cb7Y8ZOtNWA4r+M/x5kbszosb9KfTB3nShaYJjTjrIbQU61Fi8bJVVxfCZDl+6Zpkmj10vZuJsUqustanY4/MTHj8NZl2wQK68dFLH6LMBhxyIKbqRue1AmTT5Zws7n4PdQuEAiMbCv2sJOeqTQ+IlryIma0bJdalM="
+    default_dialogue: "Garrick: Lost my hatchet, lost my work. Bring it back, and I will keep you stocked with wood."
+    correct_item_dialogue: "Garrick: There it is! You have my thanks, friend. I will not forget this."
+    incorrect_item_dialogue: "Garrick: No, that is not what I asked for. Try again and bring me the right item."
+    follow_dialogue: "Garrick: So, where are we headed, friend? Lead the way."
+    non_shopkeeper_unfollow_dialogue: "Garrick: Well, this is where we part ways. Thanks for the company, friend!"
+    shopkeeper_unfollow_dialogue: "Garrick: All right, I'll stay put here. Come back when you need wood or a good tool."
+    spawn_text: <gray><italic>Hm... I hear the sound of an axe chopping wood nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
-      id: sylphies_grimoire
-      name: Sylphie's Grimoire
+      id: garricks_hatchet
+      name: Garrick's Hatchet
       lore:
-        - Hand this to Sylphie
-      custom_model_data: sylphies_grimoire
+        - Hand this to Garrick
+      custom_model_data: garricks_hatchet
       recipe:
         shape:
-          - GBG
-          - BGB
-          - GBG
+          - III
+          - IAI
+          - III
         ingredients:
-          G: GLOWSTONE_DUST
-          B: BOOK
+          I: IRON_INGOT
+          A: IRON_AXE
     shop_icon:
-      material: ENCHANTED_BOOK
-      name: Enchanted books
+      material: OAK_LOG
+      name: Buy wood
       lore:
-        - Buy enchanted books
-    sell_icon:
-      material: ENCHANTED_BOOK
+        - Buy wood related items
+    sellgui_icon:
+      material: IRON_AXE
       name: Sell items
       lore:
-        - Sell enchanting related items in one go
-    enabled: true
-  12:
-    id: luna
+        - Sell wood items in one go
+  luna:
     name: Luna
     shop: potions
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3MTE1Mjk0NTQ4MywKICAicHJvZmlsZUlkIiA6ICJiZmQ3MjMxMGNmYWY0Yjc5OTNlYzhiYzU3ODg3YzU5ZCIsCiAgInByb2ZpbGVOYW1lIiA6ICJBbHBoYVNwQW0iLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMThlY2U1ZDk3OWM2YTQ5MTNjOTE2MzgxMTFiMGFjZmE3YmVjOWNkYjQ2MjE4NTIwNmY3NmU0MThlNzE2MTk3IiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
@@ -660,6 +806,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Luna: I'll remain here, dear. Come back when you need potions or brewing supplies."
     spawn_text: <gray><italic>Hm... I catch the scent of a strange potion brewing nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: lunas_brewing_stand
       name: Luna's Brewing Stand
@@ -680,14 +828,12 @@ merchants:
       name: Buy potions
       lore:
         - Buy potions and brewing supplies
-    sell_icon:
+    sellgui_icon:
       material: GLASS_BOTTLE
       name: Sell items
       lore:
         - Sell potions and ingredients in one go
-    enabled: true
-  13:
-    id: ash
+  ash:
     name: Ash
     shop: mob_drops
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTcxNjE1ODE0NTA2MywKICAicHJvZmlsZUlkIiA6ICIyNDY1ODI2NWVjMjg0NTY4YTg3MDJkOTVlYzdlYTc4MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJBcmdvc1oxMiIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jZTJhMjc3MWNiMmYyOGZlMDkzOGZiNTNhZjE1OGI3YmY2Nzk3YjNmYzc0MTdkNjRlZmQ3NDkyMDUzNzdmYzYzIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
@@ -700,6 +846,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Ash: I'll hold this spot. Come back when you need supplies for the hunt."
     spawn_text: <gray><italic>Hm... I hear bones rattling somewhere nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: ashs_hunting_sword
       name: Ash's Hunting Sword
@@ -720,14 +868,12 @@ merchants:
       name: Buy mob drops
       lore:
         - Buy mob drops and loot
-    sell_icon:
+    sellgui_icon:
       material: BONE
       name: Sell items
       lore:
         - Sell mob drops in one go
-    enabled: true
-  14:
-    id: nox
+  nox:
     name: Nox
     shop: spawners
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNTgzMDQ1MjczMCwKICAicHJvZmlsZUlkIiA6ICI3NzI3ZDM1NjY5Zjk0MTUxODAyM2Q2MmM2ODE3NTkxOCIsCiAgInByb2ZpbGVOYW1lIiA6ICJsaWJyYXJ5ZnJlYWsiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTRjYTQxZGFkMjFlYTIzMzJlNDg4NTAyOTlmYzg1ODk4NTM3ZDljM2Q4N2UzZDQ5NDU2MDJmODM0NDk3Njk5OSIKICAgIH0KICB9Cn0="
@@ -740,6 +886,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Nox: I will remain here. Return when you seek wares from the unknown."
     spawn_text: <gray><italic>Hm... I think I see someone moving at the edge of the shadows nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: noxs_harvester
       name: Nox's Harvester
@@ -760,14 +908,12 @@ merchants:
       name: Buy spawners
       lore:
         - Buy mob spawners
-    sell_icon:
+    sellgui_icon:
       material: NETHER_STAR
       name: Sell items
       lore:
         - Sell spawner related items in one go
-    enabled: true
-  15:
-    id: lyra
+  lyra:
     name: Lyra
     shop: decorative
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzIwNzU2MjI0OCwKICAicHJvZmlsZUlkIiA6ICJmMTA0NzMxZjljYTU0NmI0OTkzNjM4NTlkZWY5N2NjNiIsCiAgInByb2ZpbGVOYW1lIiA6ICJ6aWFkODciLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzA5OWY1N2FmM2Y3NzY4YjY4NmQ0OTc0NDY1NWVjYTYyYzA3YTAwOGVkZjA3Y2QxZTBkYjVjZTBkMzI4NDM0ZCIsCiAgICAgICJtZXRhZGF0YSIgOiB7CiAgICAgICAgIm1vZGVsIiA6ICJzbGltIgogICAgICB9CiAgICB9CiAgfQp9"
@@ -780,6 +926,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Lyra: I'll wait here for a spell. Come back when you're ready for another discovery."
     spawn_text: <gray><italic>Hm... Someone nearby seems to be carrying an unusual assortment of goods</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: lyras_spyglass
       name: Lyra's Spyglass
@@ -800,14 +948,12 @@ merchants:
       name: Buy decorative
       lore:
         - Buy saplings, corals, banner patterns and more
-    sell_icon:
+    sellgui_icon:
       material: TUBE_CORAL
       name: Sell items
       lore:
         - Sell decorative items in one go
-    enabled: true
-  16:
-    id: flora
+  flora:
     name: Flora
     shop: dyes
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTYxNDEwNTY0MDYwOSwKICAicHJvZmlsZUlkIiA6ICI5ZDEzZjcyMTcxM2E0N2U0OTAwZTMyZGVkNjBjNDY3MyIsCiAgInByb2ZpbGVOYW1lIiA6ICJUYWxvZGFvIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzY2MDNmMDRmYzhjYzVjNDJjM2M3NTYxNGQ3YTFkOWNlYjMxOTFiZDU4NDk5ODNkMDg2NWM3ZTQ5ZjllMjk3MmIiLAogICAgICAibWV0YWRhdGEiIDogewogICAgICAgICJtb2RlbCIgOiAic2xpbSIKICAgICAgfQogICAgfQogIH0KfQ=="
@@ -820,6 +966,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Flora: I'll stay here, dear. Come back when you need something from the forest."
     spawn_text: <gray><italic>Hm... I can smell fresh flowers blooming nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: floras_lavender
       name: Flora's Lavender
@@ -840,14 +988,12 @@ merchants:
       name: Buy flowers and dyes
       lore:
         - Buy flowers, ink and dyes
-    sell_icon:
+    sellgui_icon:
       material: INK_SAC
       name: Sell items
       lore:
         - Sell flowers and dyes in one go
-    enabled: true
-  17:
-    id: jasper
+  jasper:
     name: Jasper
     shop: music
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc4NzI0MDMwNjE5NywKICAicHJvZmlsZUlkIiA6ICJkYTA1Y2Q3OWZkYjc0MDJlYTdjNjMzY2NkZmYzMDI4YyIsCiAgInByb2ZpbGVOYW1lIiA6ICJGZXJuYW5kMGFsMG5zMCIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9jMTg0YjAxMjU3M2RlNDdjNDgyZGNhN2IzNDZjYzI1MmE4Njg5NTAzNWQ4MTkyZjE1MzkzMjBjYmM5ZTFiZGYwIiwKICAgICAgIm1ldGFkYXRhIiA6IHsKICAgICAgICAibW9kZWwiIDogInNsaW0iCiAgICAgIH0KICAgIH0KICB9Cn0="
@@ -860,6 +1006,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Jasper: I'll stay here, mate. Come back when you're ready to browse my collection."
     spawn_text: <gray><italic>Hm... I hear a faint tune drifting from somewhere nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: jaspers_record_player
       name: Jasper's Record Player
@@ -880,14 +1028,12 @@ merchants:
       name: Buy music discs
       lore:
         - Buy all kinds of music discs
-    sell_icon:
+    sellgui_icon:
       material: JUKEBOX
       name: Sell items
       lore:
         - Sell music discs in one go
-    enabled: true
-  18:
-    id: rufus
+  rufus:
     name: Rufus
     shop: storage
     skin_value: "ewogICJ0aW1lc3RhbXAiIDogMTc3NzA0NTgxMjI5NCwKICAicHJvZmlsZUlkIiA6ICI2MzA1MDhmN2YyODg0N2E1OTA0ZTk2Mjc3NmFjM2ExMyIsCiAgInByb2ZpbGVOYW1lIiA6ICJkeWxhbmNhdHMiLAogICJzaWduYXR1cmVSZXF1aXJlZCIgOiB0cnVlLAogICJ0ZXh0dXJlcyIgOiB7CiAgICAiU0tJTiIgOiB7CiAgICAgICJ1cmwiIDogImh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTFlMDkyZjFmYjg2MzI1MjFkZDdlZTBkNzZlM2Q2ZGE5OTY0NTUwZDVhNWMzMjhhYTA4M2Q4ZDdmMTY4NTQ2MiIKICAgIH0KICB9Cn0="
@@ -900,6 +1046,8 @@ merchants:
     shopkeeper_unfollow_dialogue: "Rufus: I'll stay put, mate. Come back when you need somewhere to stash your goods."
     spawn_text: <gray><italic>Hm... I hear wooden crates clattering nearby</italic></gray>
     glow: true
+    spawn_radius: 100
+    despawn_time: 600
     item:
       id: rufuss_barrel
       name: Rufus's Barrel
@@ -920,9 +1068,8 @@ merchants:
       name: Buy storage
       lore:
         - Buy chests, barrels, shulker boxes and more
-    sell_icon:
+    sellgui_icon:
       material: BARREL
       name: Sell items
       lore:
         - Sell storage items in one go
-    enabled: true
