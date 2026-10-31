@@ -1,7 +1,6 @@
 package com.mahin;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.CitizensEnableEvent;
-import net.citizensnpcs.api.event.DespawnReason;
 import net.citizensnpcs.api.event.NPCDeathEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.MetadataStore;
@@ -30,7 +29,9 @@ import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -41,10 +42,14 @@ import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.LivingEntity;
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import org.bukkit.scheduler.BukkitTask;
 import java.util.Random;
 import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -53,11 +58,64 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 public class Plugin extends JavaPlugin implements Listener {
     private NamespacedKey MerchantItemKey;
-    private List<Merchant> merchants = new ArrayList<>();
-    private int MerchantCount;
-    private String UpdateStatus;
+    private Map<String, BukkitTask> tasks = new HashMap<>();
+    private FileConfiguration config;
     private long SellGUIPermissionRevokeDelay;
+    private boolean AllowItemCraftingWithoutMerchant;
     private Component NoPermissionMessage;
+    private Component ItemCraftingNotAllowedMessage;
+    private boolean SuppressMerchantDeathMessage;
+    private List<WorldConfiguration> worlds = new ArrayList<>();
+    private List<Merchant> merchants = new ArrayList<>();
+    private String UpdateStatus;
+    private Random RandomInstance = new Random();
+    private static class MerchantConfiguration {
+        public String id;
+        public int rarity;
+        public boolean enabled;
+        public MerchantConfiguration(String id, int rarity, boolean enabled) {
+            this.id = id;
+            this.rarity = rarity;
+            this.enabled = enabled;
+        }
+    }
+    private static class WorldConfiguration {
+        public String name;
+        public int MerchantSpawnFrequency;
+        public List<MerchantConfiguration> EnabledMerchants;
+        public int TotalRarity;
+        public WorldConfiguration(String name, int MerchantSpawnFrequency, List<MerchantConfiguration> EnabledMerchants, int TotalRarity) {
+            this.name = name;
+            this.MerchantSpawnFrequency = MerchantSpawnFrequency;
+            this.EnabledMerchants = EnabledMerchants;
+            this.TotalRarity = TotalRarity;
+        }
+        public String MerchantQuery(String MerchantId) {
+            for (MerchantConfiguration MerchantConfiguration : EnabledMerchants) {
+                if (MerchantConfiguration.id.equals(MerchantId)) {
+                    if (MerchantConfiguration.enabled) {
+                        return "Enabled";
+                    }
+                    else {
+                        return "Disabled";
+                    }
+                }
+            }
+            return "Does not exist";
+        }
+        public String RandomMerchant(Random RandomInstance) {
+            int RandomValue = RandomInstance.nextInt(TotalRarity) + 1;
+            for (MerchantConfiguration merchant: EnabledMerchants) {
+                if (merchant.enabled) {
+                    RandomValue -= merchant.rarity;
+                    if (RandomValue <= 0) {
+                        return merchant.id;
+                    }
+                }
+            }
+            return null;
+        }
+    }
     private static class Merchant {
         public String id;
         public String name;
@@ -72,6 +130,8 @@ public class Plugin extends JavaPlugin implements Listener {
         public Component ShopkeeperUnfollowDialogue;
         public Component SpawnText;
         public boolean glow;
+        public int SpawnRadius;
+        public long DespawnTime;
         public String ItemId;
         public Component ItemName;
         public List<Component> ItemLore;
@@ -86,8 +146,7 @@ public class Plugin extends JavaPlugin implements Listener {
         public Component SellIconName;
         public List<Component> SellIconLore;
         public ItemStack SellGUIIcon;
-        public boolean enabled;
-        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component DefaultDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, Component SpawnText, boolean glow, String ItemId, Component ItemName, List<Component> ItemLore, String ItemCMDS, ItemStack item, Inventory ItemCraftingRecipeGUI, Material ShopIconMaterial, Component ShopIconName, List<Component> ShopIconLore, ItemStack ShopIcon, Material SellIconMaterial, Component SellIconName, List<Component> SellIconLore, ItemStack SellGUIIcon, boolean enabled) {
+        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component DefaultDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, Component SpawnText, boolean glow, int SpawnRadius, long DespawnTime, String ItemId, Component ItemName, List<Component> ItemLore, String ItemCMDS, ItemStack item, Inventory ItemCraftingRecipeGUI, Material ShopIconMaterial, Component ShopIconName, List<Component> ShopIconLore, ItemStack ShopIcon, Material SellIconMaterial, Component SellIconName, List<Component> SellIconLore, ItemStack SellGUIIcon) {
             this.id = id;
             this.name = name;
             this.shop = shop;
@@ -101,6 +160,8 @@ public class Plugin extends JavaPlugin implements Listener {
             this.ShopkeeperUnfollowDialogue = ShopkeeperUnfollowDialogue;
             this.SpawnText = SpawnText;
             this.glow = glow;
+            this.SpawnRadius = SpawnRadius;
+            this.DespawnTime = DespawnTime;
             this.ItemId = ItemId;
             this.ItemName = ItemName;
             this.ItemLore = ItemLore;
@@ -115,7 +176,6 @@ public class Plugin extends JavaPlugin implements Listener {
             this.SellIconName = SellIconName;
             this.SellIconLore = SellIconLore;
             this.SellGUIIcon = SellGUIIcon;
-            this.enabled = enabled;
         }
     }
     private static class InventoryOwner implements InventoryHolder {
@@ -149,7 +209,7 @@ public class Plugin extends JavaPlugin implements Listener {
         return item;
     }
     private Merchant GetMerchantData(String id) {
-        for (int i=0; i<MerchantCount; i++) {
+        for (int i=0; i<merchants.size(); i++) {
             Merchant MerchantData = merchants.get(i);
             if (MerchantData.id.equals(id)) {
                 return MerchantData;
@@ -161,28 +221,67 @@ public class Plugin extends JavaPlugin implements Listener {
     public void onEnable() {
         MerchantItemKey = new NamespacedKey(this, "merchant_item");
         saveDefaultConfig();
-        FileConfiguration config = getConfig();
+        config = getConfig();
         // ---------------------------------------------
         // LEGACY CODE
         // ---------------------------------------------
-        if (config.getInt("config_version") < 3) {
-            config.set("no_permission_message", "<red>You don't have permission to use this command.</red>");
-            config.set("config_version", 3);
-            saveConfig();
+        if (config.getDouble("config_version") < 3.1)
+        {
+            File OldConfigFile = new File(getDataFolder(), "config.yml");
+            File BackupFile = new File(getDataFolder(), "old_config.yml");
+            try
+            {
+                String OldContent = new String(java.nio.file.Files.readAllBytes(OldConfigFile.toPath()));
+                String Header = "# This is your old config file. It was backed up here because it is incompatible with the current version of Wandering Merchants.\n# You can use this as a reference to reconfigure the new config.yml.\n\n";
+                java.nio.file.Files.writeString(BackupFile.toPath(), Header + OldContent);
+                OldConfigFile.delete();
+            }
+            catch (Exception e)
+            {
+                getLogger().severe("Failed to back up old config: " + e.getMessage());
+            }
+            saveDefaultConfig();
+            reloadConfig();
+            getLogger().warning("Old config backed up to old_config.yml. A new default config has been generated.");
+            config = getConfig();
         }
         // ---------------------------------------------
-        long MerchantSpawnFrequency = config.getInt("merchant_spawn_frequency") * 20L;
-        long MerchantDespawnTime = config.getInt("merchant_despawn_time") * 1000L;
         long MerchantDespawnCheckFrequency = config.getInt("merchant_despawn_check_frequency") * 20L;
-        int MerchantSpawnRadius = config.getInt("merchant_spawn_radius");
         SellGUIPermissionRevokeDelay = config.getLong("sellgui_permission_revoke_delay");
         MiniMessage MiniMessageInstance = MiniMessage.miniMessage();
-        NoPermissionMessage = MiniMessageInstance.deserialize(config.getString("no_permission_message"));
+        AllowItemCraftingWithoutMerchant = config.getBoolean("allow_item_crafting_without_merchant");
+        NoPermissionMessage = MiniMessageInstance.deserialize(config.getString("messages.no_permission"));
+        String RawItemCraftingNotAllowedMessage = config.getString("messages.item_crafting_not_allowed");
+        if (RawItemCraftingNotAllowedMessage != null) {
+            ItemCraftingNotAllowedMessage = MiniMessageInstance.deserialize(RawItemCraftingNotAllowedMessage);
+        }
+        SuppressMerchantDeathMessage = config.getBoolean("suppress_merchant_death_message");
+        ConfigurationSection WorldsSection = config.getConfigurationSection("worlds");
+        if (WorldsSection != null) {
+            for (String WorldName : WorldsSection.getKeys(false)) {
+                ConfigurationSection WorldSection = WorldsSection.getConfigurationSection(WorldName);
+                ConfigurationSection WorldMerchantsSection = WorldSection.getConfigurationSection("merchants");
+                List<MerchantConfiguration> EnabledMerchants = new ArrayList<>();
+                int TotalRarity = 0;
+                if (WorldMerchantsSection != null) {
+                    for (String MerchantId : WorldMerchantsSection.getKeys(false)) {
+                        ConfigurationSection MerchantSection = WorldMerchantsSection.getConfigurationSection(MerchantId);
+                        boolean enabled = MerchantSection.getBoolean("enabled");
+                        int rarity = MerchantSection.getInt("rarity");
+                        if (enabled) {
+                            TotalRarity += rarity;
+                        }
+                        EnabledMerchants.add(new MerchantConfiguration(MerchantId, rarity, enabled));
+                    }
+                }
+                worlds.add(new WorldConfiguration(WorldName, WorldSection.getInt("merchant_spawn_frequency"), EnabledMerchants, TotalRarity));
+            }
+        }
         ConfigurationSection MerchantsSection = config.getConfigurationSection("merchants");
         if (MerchantsSection != null) {
             for (String key: MerchantsSection.getKeys(false)) {
                 ConfigurationSection MerchantSection = MerchantsSection.getConfigurationSection(key);
-                String id = MerchantSection.getString("id");
+                String id = key;
                 String name = MerchantSection.getString("name");
                 String shop = MerchantSection.getString("shop");
                 String SkinValue = MerchantSection.getString("skin_value");
@@ -199,6 +298,8 @@ public class Plugin extends JavaPlugin implements Listener {
                     SpawnText = MiniMessageInstance.deserialize(RawSpawnText);
                 }
                 boolean glow = MerchantSection.getBoolean("glow");
+                int SpawnRadius = MerchantSection.getInt("spawn_radius");
+                long DespawnTime = MerchantSection.getInt("despawn_time") * 1000L;
                 ConfigurationSection ItemSection = MerchantSection.getConfigurationSection("item");
                 String ItemId = ItemSection.getString("id");
                 Component ItemName = MiniMessageInstance.deserialize(ItemSection.getString("name"));
@@ -221,6 +322,12 @@ public class Plugin extends JavaPlugin implements Listener {
                         }
                     }
                 }
+                ShapedRecipe ItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, ItemId), item);
+                ItemCraftingRecipe.shape(shape.get(0), shape.get(1), shape.get(2));
+                for (String ingredient: IngredientsSection.getKeys(false)) {
+                    ItemCraftingRecipe.setIngredient(ingredient.charAt(0), Material.valueOf(IngredientsSection.getString(ingredient)));
+                }
+                Bukkit.addRecipe(ItemCraftingRecipe);
                 ConfigurationSection ShopIconSection = MerchantSection.getConfigurationSection("shop_icon");
                 Material ShopIconMaterial = Material.valueOf(ShopIconSection.getString("material"));
                 Component ShopIconName = MiniMessageInstance.deserialize(ShopIconSection.getString("name"));
@@ -229,28 +336,68 @@ public class Plugin extends JavaPlugin implements Listener {
                     ShopIconLore.add(MiniMessageInstance.deserialize(line));
                 }
                 ItemStack ShopIcon = CreateItem(ShopIconMaterial, ShopIconName, ShopIconLore, null, null);
-                ConfigurationSection SellIconSection = MerchantSection.getConfigurationSection("sell_icon");
-                Material SellIconMaterial = Material.valueOf(SellIconSection.getString("material"));
-                Component SellIconName = MiniMessageInstance.deserialize(SellIconSection.getString("name"));
-                List<Component> SellIconLore = new ArrayList<>();
-                for (String line: SellIconSection.getStringList("lore")) {
-                    SellIconLore.add(MiniMessageInstance.deserialize(line));
+                ConfigurationSection SellGUIIconSection = MerchantSection.getConfigurationSection("sellgui_icon");
+                Material SellGUIIconMaterial = Material.valueOf(SellGUIIconSection.getString("material"));
+                Component SellGUIIconName = MiniMessageInstance.deserialize(SellGUIIconSection.getString("name"));
+                List<Component> SellGUIIconLore = new ArrayList<>();
+                for (String line: SellGUIIconSection.getStringList("lore")) {
+                    SellGUIIconLore.add(MiniMessageInstance.deserialize(line));
                 }
-                ItemStack SellGUIIcon = CreateItem(SellIconMaterial, SellIconName, SellIconLore, null, null);
-                boolean enabled = MerchantSection.getBoolean("enabled");
-                Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, DefaultDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, SpawnText, glow, ItemId, ItemName, ItemLore, ItemCMDS, item, ItemCraftingRecipeGUI, ShopIconMaterial, ShopIconName, ShopIconLore, ShopIcon, SellIconMaterial, SellIconName, SellIconLore, SellGUIIcon, enabled);
+                ItemStack SellGUIIcon = CreateItem(SellGUIIconMaterial, SellGUIIconName, SellGUIIconLore, null, null);
+                Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, DefaultDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, SpawnText, glow, SpawnRadius, DespawnTime, ItemId, ItemName, ItemLore, ItemCMDS, item, ItemCraftingRecipeGUI, ShopIconMaterial, ShopIconName, ShopIconLore, ShopIcon, SellGUIIconMaterial, SellGUIIconName, SellGUIIconLore, SellGUIIcon);
                 merchants.add(merchant);
-                if (enabled) {
-                    ShapedRecipe ItemCraftingRecipe = new ShapedRecipe(new NamespacedKey(this, ItemId), item);
-                    ItemCraftingRecipe.shape(shape.get(0), shape.get(1), shape.get(2));
-                    for (String ingredient: IngredientsSection.getKeys(false)) {
-                        ItemCraftingRecipe.setIngredient(ingredient.charAt(0), Material.valueOf(IngredientsSection.getString(ingredient)));
-                    }
-                    Bukkit.addRecipe(ItemCraftingRecipe);
-                }
             }
         }
-        MerchantCount = merchants.size();
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (NPC npc : CitizensAPI.getNPCRegistry()) {
+                MetadataStore NPCData = npc.data();
+                String NPCMerchantVariant = NPCData.get("merchant_variant");
+                if (NPCMerchantVariant != null && (NPCMerchantVariant.equals("stray") || NPCMerchantVariant.equals("stray_moving"))) {
+                    if (System.currentTimeMillis() - (long) NPCData.get("creation_time") >= GetMerchantData(NPCData.get("merchant_id")).DespawnTime) {
+                        npc.destroy();
+                    }
+                }
+            }
+        }, MerchantDespawnCheckFrequency, MerchantDespawnCheckFrequency);
+        tasks.put("merchant_despawner", task);
+        for (WorldConfiguration WorldConfiguration : worlds) {
+            long MerchantSpawnFrequency = WorldConfiguration.MerchantSpawnFrequency * 20L;
+            task = Bukkit.getScheduler().runTaskTimer(this, () -> {
+                World world = Bukkit.getWorld(WorldConfiguration.name);
+                List<Player> WorldPlayers = world.getPlayers();
+                if (!WorldPlayers.isEmpty()) {
+                    Player RandomPlayer = WorldPlayers.get(RandomInstance.nextInt(WorldPlayers.size()));
+                    String RandomMerchantId = WorldConfiguration.RandomMerchant(RandomInstance);
+                    Merchant RandomMerchant = GetMerchantData(RandomMerchantId);
+                    if (RandomMerchant != null) {
+                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, RandomMerchant.name);
+                        MetadataStore NPCData = npc.data();
+                        NPCData.setPersistent("merchant_id", RandomMerchantId);
+                        NPCData.setPersistent("merchant_variant", "stray");
+                        NPCData.setPersistent("merchant_viewers", 0);
+                        NPCData.setPersistent("creation_time", System.currentTimeMillis());
+                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                        npc.getOrAddTrait(LookClose.class).toggle();
+                        if (RandomMerchant.glow) {
+                            NPCData.setPersistent(NPC.Metadata.GLOWING, true);
+                        }
+                        npc.setProtected(false);
+                        npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
+                        npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(RandomMerchant.name, RandomMerchant.SkinSignature, RandomMerchant.SkinValue);
+                        int NewX = RandomPlayer.getLocation().blockX() + RandomInstance.nextInt(RandomMerchant.SpawnRadius * 2 + 1) - RandomMerchant.SpawnRadius;
+                        int NewZ = RandomPlayer.getLocation().blockZ() + RandomInstance.nextInt(RandomMerchant.SpawnRadius * 2 + 1) - RandomMerchant.SpawnRadius;
+                        npc.spawn(new Location(world, NewX + 0.5, world.getHighestBlockYAt(NewX, NewZ) + 1, NewZ + 0.5));
+                        if (RandomMerchant.SpawnText != null) {
+                            RandomPlayer.sendMessage(RandomMerchant.SpawnText);
+                        }
+                    }
+                    else {
+                        getLogger().severe("Tried to spawn unknown merchant " + RandomMerchantId + " in world " + WorldConfiguration.name);
+                    }
+                }
+            }, MerchantSpawnFrequency, MerchantSpawnFrequency);
+            tasks.put(WorldConfiguration.name + "_merchant_spawner", task);
+        }
         String VersionString = "";
         int VersionInteger = 0;
         HttpURLConnection GithubRequest = null;
@@ -273,118 +420,124 @@ public class Plugin extends JavaPlugin implements Listener {
                 scanner.close();
             }
         }
-        if (VersionInteger > 116) {
-            UpdateStatus = "There is a new update: v" + VersionString;
+        if (VersionInteger > 117) {
+            UpdateStatus = "There is a new version available: v" + VersionString;
         }
-        else if (VersionInteger == 116) {
+        else if (VersionInteger == 117) {
             UpdateStatus = "You are using the latest version";
         }
         else {
             UpdateStatus = "Unable to check for updates";
         }
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            List<Player> OverworldPlayers = new ArrayList<>();
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.getWorld().getName().equals("world")) {
-                    OverworldPlayers.add(player);
-                }
-            }
-            int OverworldPlayerCount = OverworldPlayers.size();
-            if (OverworldPlayerCount != 0) {
-                Random RandomInstance = new Random();
-                Player RandomPlayer = OverworldPlayers.get(RandomInstance.nextInt(OverworldPlayerCount));
-                Merchant RandomMerchant = merchants.get(RandomInstance.nextInt(MerchantCount));
-                NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, RandomMerchant.name);
-                MetadataStore NPCData = npc.data();
-                NPCData.setPersistent("merchant_id", RandomMerchant.id);
-                NPCData.setPersistent("merchant_variant", "stray");
-                NPCData.setPersistent("merchant_viewers", 0);
-                NPCData.setPersistent("creation_time", System.currentTimeMillis());
-                npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
-                npc.getOrAddTrait(LookClose.class).toggle();
-                if (RandomMerchant.glow) {
-                    NPCData.setPersistent(NPC.Metadata.GLOWING, true);
-                }
-                npc.setProtected(false);
-                npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
-                npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(RandomMerchant.name, RandomMerchant.SkinSignature, RandomMerchant.SkinValue);
-                World world = Bukkit.getWorld("world");
-                int NewX = RandomPlayer.getLocation().blockX() + RandomInstance.nextInt(MerchantSpawnRadius*2 + 1) - MerchantSpawnRadius;
-                int NewZ = RandomPlayer.getLocation().blockZ() + RandomInstance.nextInt(MerchantSpawnRadius*2 + 1) - MerchantSpawnRadius;
-                npc.spawn(new Location(world, NewX + 0.5, world.getHighestBlockYAt(NewX, NewZ) + 1, NewZ + 0.5));
-                if (RandomMerchant.SpawnText != null) {
-                    RandomPlayer.sendMessage(RandomMerchant.SpawnText);
-                }
-            }
-        }, MerchantSpawnFrequency, MerchantSpawnFrequency);
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            for (NPC npc : CitizensAPI.getNPCRegistry()) {
-                MetadataStore NPCData = npc.data();
-                String NPCMerchantVariant = NPCData.get("merchant_variant");
-                if (NPCMerchantVariant != null && (NPCMerchantVariant.equals("stray") || NPCMerchantVariant.equals("stray_moving"))) {
-                    if (System.currentTimeMillis() - (long) NPCData.get("creation_time") >= MerchantDespawnTime) {
-                        npc.destroy();
-                    }
-                }
-            }
-        }, MerchantDespawnCheckFrequency, MerchantDespawnCheckFrequency);
         Bukkit.getPluginManager().registerEvents(this, this);
         new Metrics(this, 34647);
     }
     @EventHandler
-    public void onCitizensEnable(CitizensEnableEvent event) {
-        int NPCDeleted = 0;
+    public void OnCitizensEnable(CitizensEnableEvent event) {
         for (NPC npc: CitizensAPI.getNPCRegistry()) {
             MetadataStore NPCData = npc.data();
-            String NPCMerchantId = NPCData.get("merchant_id");
-            if (NPCMerchantId != null) {
-                Merchant MerchantData = GetMerchantData(NPCMerchantId);
+            String MerchantId = NPCData.get("merchant_id");
+            if (MerchantId != null) {
+                Merchant MerchantData = GetMerchantData(MerchantId);
                 if (MerchantData != null) {
-                    if (MerchantData.enabled) {
-                        if (NPCData.get("merchant_variant").equals("stray")) {
-                            NPCData.setPersistent("merchant_viewers", 0);
-                            npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                    boolean WorldFound = false;
+                    for (WorldConfiguration WorldConfiguration : worlds) {
+                        if (WorldConfiguration.name.equals(npc.getStoredLocation().getWorld().getName())) {
+                            WorldFound = true;
+                            String MerchantStatus = WorldConfiguration.MerchantQuery(MerchantId);
+                            if (MerchantStatus.equals("Enabled")) {
+                                if (NPCData.get("merchant_variant").equals("stray")) {
+                                    NPCData.setPersistent("merchant_viewers", 0);
+                                    npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                }
+                                npc.setName(MerchantData.name);
+                                npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
+                                npc.spawn(npc.getStoredLocation());
+                            }
+                            else if (MerchantStatus.equals("Disabled")) {
+                                npc.despawn();
+                            }
+                            else {
+                                npc.destroy();
+                            }
+                            break;
                         }
-                        npc.setName(MerchantData.name);
-                        npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
-                        npc.spawn(npc.getStoredLocation());
-                    } else {
-                        npc.despawn(DespawnReason.REMOVAL);
                     }
-                } else {
+                    if (!WorldFound) {
+                        npc.destroy();
+                    }
+                }
+                else {
                     npc.destroy();
-                    NPCDeleted++;
                 }
             }
         }
-        int TotalMerchants = MerchantCount;
-        for (int i = 0; i < MerchantCount; i++) {
-            if (!merchants.get(i).enabled) {
-                merchants.remove(i);
-                MerchantCount--;
-                i--;
-            }
-        }
         getLogger().info("=============================================");
-        getLogger().info("Wandering Merchants v1.1.6");
+        getLogger().info("Wandering Merchants v1.1.7");
         getLogger().info("Made by MahinBro001238");
         getLogger().info("Licensed under the Apache License 2.0");
         getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
         getLogger().info(UpdateStatus);
-        getLogger().info("Merchants Loaded: " + TotalMerchants);
-        getLogger().info("Merchants Enabled: " + MerchantCount);
-        getLogger().info("Merchants Disabled: " + (TotalMerchants - MerchantCount));
-        getLogger().info("NPCs Deleted: " + NPCDeleted);
         getLogger().info("Wandering Merchants has been enabled");
         getLogger().info("=============================================");
-        if (MerchantCount == 0) {
-            getLogger().info("No merchants are enabled in the config");
-            getLogger().info("Wandering Merchants will now disable itself");
+        if (worlds.isEmpty()) {
+            getLogger().severe("No worlds are defined in the config");
+            getLogger().severe("Wandering Merchants will now disable itself");
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
+        else if (merchants.isEmpty()) {
+            getLogger().severe("No merchants are defined in the config");
+            getLogger().severe("Wandering Merchants will now disable itself");
             Bukkit.getPluginManager().disablePlugin(this);
         }
     }
     @EventHandler
-    public void onNPCRightClick(NPCRightClickEvent event) {
+    public void OnItemCraft(CraftItemEvent event) {
+        ItemStack result = event.getRecipe().getResult();
+        ItemMeta ItemMeta = result.getItemMeta();
+        Player player = (Player) event.getWhoClicked();
+        if (ItemMeta != null && ItemMeta.getPersistentDataContainer().has(MerchantItemKey)) {
+            if (!AllowItemCraftingWithoutMerchant) {
+                String WorldName = player.getWorld().getName();
+                boolean WorldFound = false;
+                for (WorldConfiguration WorldConfiguration: worlds) {
+                    if (WorldConfiguration.name.equals(WorldName)) {
+                        WorldFound = true;
+                        String ItemId = ItemMeta.getPersistentDataContainer().get(MerchantItemKey, PersistentDataType.STRING);
+                        boolean ItemsMerchantFound = false;
+                        for (MerchantConfiguration MerchantConfiguration: WorldConfiguration.EnabledMerchants) {
+                            String MerchantId = MerchantConfiguration.id;
+                            Merchant MerchantData = GetMerchantData(MerchantId);
+                            if (MerchantData == null) {
+                                getLogger().severe("Found unknown merchant " + MerchantId + " in world " + WorldName + "'s configuration");
+                            }
+                            else {
+                                if (MerchantData.ItemId.equals(ItemId)) {
+                                    ItemsMerchantFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!ItemsMerchantFound) {
+                            event.setCancelled(true);
+                            if (ItemCraftingNotAllowedMessage != null) {
+                                player.sendMessage(ItemCraftingNotAllowedMessage);
+                            }
+                        }
+                        break;
+                    }
+                }
+                if (!WorldFound) {
+                    event.setCancelled(true);
+                    if (ItemCraftingNotAllowedMessage != null) {
+                        player.sendMessage(ItemCraftingNotAllowedMessage);
+                    }
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void OnNPCRightClick(NPCRightClickEvent event) {
         NPC npc = event.getNPC();
         MetadataStore NPCData = npc.data();
         String NPCMerchantId = NPCData.get("merchant_id");
@@ -448,7 +601,7 @@ public class Plugin extends JavaPlugin implements Listener {
         }
     }
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
+    public void OnInventoryClick(InventoryClickEvent event) {
         Inventory inventory = event.getInventory();
         InventoryHolder owner = inventory.getHolder();
         if (owner instanceof InventoryOwner) {
@@ -531,7 +684,7 @@ public class Plugin extends JavaPlugin implements Listener {
         }
     }
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
+    public void OnInventoryClose(InventoryCloseEvent event) {
         InventoryHolder owner = event.getInventory().getHolder();
         if (owner instanceof InventoryOwner) {
             String OwnerString = ((InventoryOwner) owner).owner;
@@ -565,22 +718,27 @@ public class Plugin extends JavaPlugin implements Listener {
         }
     }
     @EventHandler
-    public void onNPCDeath(NPCDeathEvent event) {
-        NPC npc = event.getNPC();
-        if (npc.data().get("merchant_id") != null) {
-            npc.destroy();
+    public void OnNPCDeath(PlayerDeathEvent event) {
+        NPC npc = CitizensAPI.getNPCRegistry().getNPC(event.getEntity());
+        if (npc != null) {
+            if (npc.data().get("merchant_id") != null) {
+                npc.destroy();
+                if (SuppressMerchantDeathMessage) {
+                    event.deathMessage(null);
+                }
+            }
         }
     }
     @EventHandler
     public void OnPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (UpdateStatus.startsWith("There is a new update: v") && player.hasPermission("wanderingmerchants.wm")) {
+        if (UpdateStatus.startsWith("There is a new version available: v") && player.hasPermission("wanderingmerchants.wm")) {
             player.sendMessage(Component.text("[Wandering Merchants] " + UpdateStatus, NamedTextColor.YELLOW));
         }
     }
     @Override
     public void onDisable() {
-        getLogger().info("Wandering Merchants v1.1.6 has been disabled");
+        getLogger().info("Wandering Merchants v1.1.7 has been disabled");
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -591,47 +749,43 @@ public class Plugin extends JavaPlugin implements Listener {
                         if (args.length == 2 || args.length == 3) {
                             Merchant MerchantData = GetMerchantData(args[1]);
                             if (MerchantData != null) {
-                                if (MerchantData.enabled) {
-                                    Player player;
+                                Player player;
+                                if (args.length == 3) {
+                                    player = Bukkit.getPlayer(args[2]);
+                                }
+                                else {
+                                    player = CommandExecutor;
+                                }
+                                if (player != null) {
+                                    NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, MerchantData.name);
+                                    MetadataStore NPCData = npc.data();
+                                    NPCData.setPersistent("merchant_id", MerchantData.id);
+                                    NPCData.setPersistent("merchant_variant", "stray");
+                                    NPCData.setPersistent("merchant_viewers", 0);
+                                    NPCData.setPersistent("creation_time", System.currentTimeMillis());
+                                    npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                    npc.getOrAddTrait(LookClose.class).toggle();
+                                    if (MerchantData.glow) {
+                                        NPCData.setPersistent(NPC.Metadata.GLOWING, true);
+                                    }
+                                    npc.setProtected(false);
+                                    npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
+                                    npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
+                                    npc.spawn(player.getLocation());
+                                    if (MerchantData.SpawnText != null) {
+                                        player.sendMessage(MerchantData.SpawnText);
+                                    }
                                     if (args.length == 3) {
-                                        player = Bukkit.getPlayer(args[2]);
+                                        CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + " at " + player.getName() + "'s location", NamedTextColor.GOLD));
                                     }
                                     else {
-                                        player = CommandExecutor;
-                                    }
-                                    if (player != null) {
-                                        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, MerchantData.name);
-                                        MetadataStore NPCData = npc.data();
-                                        NPCData.setPersistent("merchant_id", MerchantData.id);
-                                        NPCData.setPersistent("merchant_variant", "stray");
-                                        NPCData.setPersistent("merchant_viewers", 0);
-                                        NPCData.setPersistent("creation_time", System.currentTimeMillis());
-                                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
-                                        npc.getOrAddTrait(LookClose.class).toggle();
-                                        if (MerchantData.glow) {
-                                            NPCData.setPersistent(NPC.Metadata.GLOWING, true);
-                                        }
-                                        npc.setProtected(false);
-                                        npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
-                                        npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
-                                        npc.spawn(player.getLocation());
-                                        if (MerchantData.SpawnText != null) {
-                                            player.sendMessage(MerchantData.SpawnText);
-                                        }
-                                        if (args.length == 3) {
-                                            CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + " at " + player.getName() + "'s location", NamedTextColor.GOLD));
-                                        }
-                                        else {
-                                            CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + "", NamedTextColor.GOLD));
-                                        }
-                                    }
-                                    else {
-                                        CommandExecutor.sendMessage(Component.text("Unknown player: " + args[2], NamedTextColor.RED));
+                                        CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + "", NamedTextColor.GOLD));
                                     }
                                 }
                                 else {
-                                    CommandExecutor.sendMessage(Component.text("You cannot spawn disabled merchants", NamedTextColor.RED));
+                                    CommandExecutor.sendMessage(Component.text("Unknown player: " + args[2], NamedTextColor.RED));
                                 }
+
                             }
                             else {
                                 CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[1], NamedTextColor.RED));
@@ -775,7 +929,6 @@ public class Plugin extends JavaPlugin implements Listener {
                                         for (int i = 0; i < SellIconLore.size(); i++) {
                                             CommandExecutor.sendMessage(SellIconLore.get(i));
                                         }
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Enabled: ", NamedTextColor.GOLD)).append(Component.text(String.valueOf(MerchantData.enabled))));
                                     }
                                     else {
                                         CommandExecutor.sendMessage(Component.text("Unknown merchant: " + args[2], NamedTextColor.RED));
@@ -975,7 +1128,7 @@ public class Plugin extends JavaPlugin implements Listener {
                                                     CMDS.setStrings(List.of());
                                                     CommandExecutor.sendMessage(Component.text("Removed custom model data", NamedTextColor.GOLD));
                                                 }
-                                                else{
+                                                else {
                                                     CMDS.setStrings(List.of(args[3]));
                                                     CommandExecutor.sendMessage(Component.text("Custom model data set to: " + args[3], NamedTextColor.GOLD));
                                                 }
