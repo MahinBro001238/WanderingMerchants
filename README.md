@@ -33,8 +33,13 @@ The NPCs themselves are created and controlled through Citizens2. For the actual
 - `/wm recipe <merchant id> [player]` — Open a merchant item's crafting recipe GUI for yourself or another player
   - `/wm recipe sylphie` or `/wm recipe sylphie MahinBro`
 
-- `/wm get merchant_data <merchant id>` — View the config data of a merchant
-  - `/wm get merchant_data sylphie`
+- `/wm get general_config` — View the config data general settings
+
+- `/wm get worlds_config <world name>` — View the config data for a specific world
+  - `/wm get worlds_config world`
+
+- `/wm get merchants_config <merchant id>` — View the config data of a merchant
+  - `/wm get merchants_config sylphie`
 
 - `/wm get npc_data <npc id>` — View the internal data of a merchant NPC set by this plugin
   - `/wm get npc_data 3`
@@ -51,14 +56,14 @@ The NPCs themselves are created and controlled through Citizens2. For the actual
   | `merchant_variant` | The current state of the merchant NPC | `stray`, `stray_moving`, `shopkeeper`, `shopkeeper_moving`, or `NULL` | `/wm set npc_data 3 merchant_variant shopkeeper` |
   | `merchant_viewers` | The number of players currently viewing this NPC's GUI. Only for stray variants | An integer, or `NULL` | `/wm set npc_data 3 merchant_viewers 0` |
   | `creation_time` | The timestamp of when this NPC was spawned | A long integer, or `NULL` | `/wm set npc_data 3 creation_time 1745000000000` |
-  | `following` | The player this NPC is currently following | An online player's name, or `NULL` to stop following if the NPC is following anyone at the moment | `/wm set npc_data 3 following MahinBro` |
+  | `following` | The player this NPC is currently following | An online player's name, or `NULL` to stop following | `/wm set npc_data 3 following MahinBro` |
 
   Use `NULL` as the value to clear the field.
 
 - `/wm set item_data id <value|NULL>` — Set the merchant item ID for the item in your main hand
   - `/wm set item_data id sylphie_scroll`
 
-  > ⚠️ **Use with caution.** Setting an item ID on even dirt can cause it to be accepted by a merchant or setting a incorrect item ID on a actual merchant item can cause it to not be accepted by the merchant. Only use this command if you know what you are doing.
+  > ⚠️ **Use with caution.** Setting an item ID on even dirt can cause it to be accepted by a merchant, or setting an incorrect item ID on an actual merchant item can cause it to not be accepted by the merchant. Only use this command if you know what you are doing.
 
 - `/wm set item_data cmd <value|NULL>` — Set the custom model data of the item in your main hand
   - `/wm set item_data cmd sylphie_grimoire`
