@@ -1,5 +1,5 @@
 # =============================================
-# Wandering Merchants v1.1.7
+# Wandering Merchants v1.1.8
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
@@ -7,7 +7,7 @@
 # =============================================
 
 #DO NOT CHANGE THIS VALUE
-config_version: 3.1
+config_version: 3.2
 
 # How often the plugin checks for merchants that should despawn, in seconds
 # Warning: If this value is too high, merchants may stay longer than the specified despawn time
@@ -67,7 +67,7 @@ messages:
 #   - "say %merchant_name% has appeared in %world%!"
 #   - "broadcast A merchant is here!"
 #
-# EVENTS SECTION IS UNDER DEVELOPMENT AND NOT USABLE IN VERSION 1.1.7
+# EVENTS SECTION IS UNDER DEVELOPMENT AND NOT USABLE IN VERSION 1.1.8
 # I added this section even though its not being used so that I don't have to migrate the config again
 # To learn about when this section becomes usable, make sure to read the release notes of future releases
 events:
@@ -198,12 +198,13 @@ worlds:
         enabled: true
 
 # A list of all the merchants in the plugin
-# If you want to remove all merchants
-# Just set merchants to be null
+# You must have atleast one merchant defined here
 merchants:
 
   # An ID (string) that is used by the plugin to identify this merchant
   # Warning: The ID must unique between all merchants and must not contain any spaces
+  # If multiple merchants are using the same ID, only the merchant that is loaded last
+  # by the plugin will be assigned that ID, the other definations will be voided
 
   # READ THIS CAREFULLY
 
@@ -301,6 +302,10 @@ merchants:
       custom_model_data: sylphies_grimoire
 
       # The crafting recipe of the item
+      # Warning: Make sure not to use a already existing recipe like a vanilla
+      # minecraft recipe or the recipe of another merchant item. Using duplicate
+      # recipes will cause only the recipe that is loaded last by the plugin to
+      # be registered, the rest will be voided
       recipe:
 
         # The actual shape of the recipe
