@@ -34,6 +34,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -90,7 +91,7 @@ public class Plugin extends JavaPlugin implements Listener {
             this.TotalRarity = TotalRarity;
         }
         public String MerchantQuery(String MerchantId) {
-            for (MerchantConfiguration MerchantConfiguration : UsedMerchants) {
+            for (MerchantConfiguration MerchantConfiguration: UsedMerchants) {
                 if (MerchantConfiguration.id.equals(MerchantId)) {
                     if (MerchantConfiguration.enabled) {
                         return "Enabled";
@@ -104,11 +105,11 @@ public class Plugin extends JavaPlugin implements Listener {
         }
         public String RandomMerchant(Random RandomInstance) {
             int RandomValue = RandomInstance.nextInt(TotalRarity) + 1;
-            for (MerchantConfiguration merchant: UsedMerchants) {
-                if (merchant.enabled) {
-                    RandomValue -= merchant.rarity;
+            for (MerchantConfiguration MerchantConfiguration: UsedMerchants) {
+                if (MerchantConfiguration.enabled) {
+                    RandomValue -= MerchantConfiguration.rarity;
                     if (RandomValue <= 0) {
-                        return merchant.id;
+                        return MerchantConfiguration.id;
                     }
                 }
             }
@@ -121,13 +122,17 @@ public class Plugin extends JavaPlugin implements Listener {
         public String shop;
         public String SkinValue;
         public String SkinSignature;
-        public Component DefaultDialogue;
+        public Component SpawnText;
+        public Component InteractionDialogue;
         public Component CorrectItemDialogue;
         public Component IncorrectItemDialogue;
         public Component FollowDialogue;
         public Component NonShopkeeperUnfollowDialogue;
         public Component ShopkeeperUnfollowDialogue;
-        public Component SpawnText;
+        public int LostDistance;
+        public Component StuckDialogue;
+        public Component NonShopkeeperLostDialogue;
+        public Component ShopkeeperLostDialogue;
         public boolean glow;
         public int SpawnRadius;
         public int DespawnTime;
@@ -145,19 +150,23 @@ public class Plugin extends JavaPlugin implements Listener {
         public Component SellIconName;
         public List<Component> SellIconLore;
         public ItemStack SellGUIIcon;
-        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component DefaultDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, Component SpawnText, boolean glow, int SpawnRadius, int DespawnTime, String ItemId, Component ItemName, List<Component> ItemLore, String ItemCMD, ItemStack item, Inventory ItemCraftingRecipeGUI, Material ShopIconMaterial, Component ShopIconName, List<Component> ShopIconLore, ItemStack ShopIcon, Material SellIconMaterial, Component SellIconName, List<Component> SellIconLore, ItemStack SellGUIIcon) {
+        public Merchant(String id, String name, String shop, String SkinValue, String SkinSignature, Component SpawnText, Component InteractionDialogue, Component CorrectItemDialogue, Component IncorrectItemDialogue, Component FollowDialogue, Component NonShopkeeperUnfollowDialogue, Component ShopkeeperUnfollowDialogue, int LostDistance, Component StuckDialogue, Component NonShopkeeperLostDialogue, Component ShopkeeperLostDialogue, boolean glow, int SpawnRadius, int DespawnTime, String ItemId, Component ItemName, List<Component> ItemLore, String ItemCMD, ItemStack item, Inventory ItemCraftingRecipeGUI, Material ShopIconMaterial, Component ShopIconName, List<Component> ShopIconLore, ItemStack ShopIcon, Material SellIconMaterial, Component SellIconName, List<Component> SellIconLore, ItemStack SellGUIIcon) {
             this.id = id;
             this.name = name;
             this.shop = shop;
             this.SkinValue = SkinValue;
             this.SkinSignature = SkinSignature;
-            this.DefaultDialogue = DefaultDialogue;
+            this.SpawnText = SpawnText;
+            this.InteractionDialogue = InteractionDialogue;
             this.CorrectItemDialogue = CorrectItemDialogue;
             this.IncorrectItemDialogue = IncorrectItemDialogue;
             this.FollowDialogue = FollowDialogue;
             this.NonShopkeeperUnfollowDialogue = NonShopkeeperUnfollowDialogue;
             this.ShopkeeperUnfollowDialogue = ShopkeeperUnfollowDialogue;
-            this.SpawnText = SpawnText;
+            this.LostDistance = LostDistance;
+            this.StuckDialogue = StuckDialogue;
+            this.NonShopkeeperLostDialogue = NonShopkeeperLostDialogue;
+            this.ShopkeeperLostDialogue = ShopkeeperLostDialogue;
             this.glow = glow;
             this.SpawnRadius = SpawnRadius;
             this.DespawnTime = DespawnTime;
@@ -207,6 +216,53 @@ public class Plugin extends JavaPlugin implements Listener {
         item.setItemMeta(meta);
         return item;
     }
+    private void CreateMerchant(Merchant MerchantData, Location location, Player player) {
+        NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, MerchantData.name);
+        MetadataStore NPCData = npc.data();
+        NPCData.setPersistent("merchant_id", MerchantData.id);
+        NPCData.setPersistent("merchant_variant", "stray");
+        NPCData.setPersistent("merchant_viewers", 0);
+        NPCData.setPersistent("creation_time", System.currentTimeMillis());
+        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+        npc.getOrAddTrait(LookClose.class).toggle();
+        if (MerchantData.glow) {
+            NPCData.setPersistent(NPC.Metadata.GLOWING, true);
+        }
+        npc.setProtected(false);
+        npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
+        npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
+        npc.spawn(location);
+        npc.getNavigator().getDefaultParameters().stuckAction((StuckNPC, navigator) -> {
+            MetadataStore StuckNPCData = StuckNPC.data();
+            String StuckNPCMerchantVariant = StuckNPCData.get("merchant_variant");
+            if (StuckNPCMerchantVariant.endsWith("_moving")) {
+                Merchant StuckMerchantData = GetMerchantData(StuckNPCData.get("merchant_id"));
+                Player FollowingPlayer = (Player) StuckNPC.getOrAddTrait(FollowTrait.class).getFollowing();
+                Location StuckNPCLocation = StuckNPC.getStoredLocation();
+                Location FollowingPlayerLocation = FollowingPlayer.getLocation();
+                if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld()) && StuckNPCLocation.distance(FollowingPlayerLocation) <= StuckMerchantData.LostDistance) {
+                    FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                }
+                else {
+                    StuckNPCData.setPersistent("merchant_variant", StuckNPCMerchantVariant.replace("_moving", ""));
+                    StuckNPC.getOrAddTrait(FollowTrait.class).follow(null);
+                    if (StuckNPCMerchantVariant.equals("stray_moving")) {
+                        StuckNPCData.setPersistent("merchant_viewers", 0);
+                        StuckNPC.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                        FollowingPlayer.sendMessage(StuckMerchantData.NonShopkeeperLostDialogue);
+                    }
+                    else {
+                        FollowingPlayer.sendMessage(StuckMerchantData.ShopkeeperLostDialogue);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }).stationaryTicks(60);
+        if (MerchantData.SpawnText != null) {
+            player.sendMessage(MerchantData.SpawnText);
+        }
+    }
     private Merchant GetMerchantData(String id) {
         for (int i=0; i<merchants.size(); i++) {
             Merchant MerchantData = merchants.get(i);
@@ -223,10 +279,10 @@ public class Plugin extends JavaPlugin implements Listener {
         // ---------------------------------------------
         // LEGACY CODE
         // ---------------------------------------------
-        if (config.getDouble("config_version") < 3.2)
+        if (config.getDouble("config_version") < 3.3)
         {
             File OldConfigFile = new File(getDataFolder(), "config.yml");
-            File BackupFile = new File(getDataFolder(), "old_config_2.yml");
+            File BackupFile = new File(getDataFolder(), "old_config_3.yml");
             try
             {
                 String OldContent = new String(java.nio.file.Files.readAllBytes(OldConfigFile.toPath()));
@@ -240,13 +296,13 @@ public class Plugin extends JavaPlugin implements Listener {
             }
             saveDefaultConfig();
             reloadConfig();
-            getLogger().warning("Old config backed up to old_config.yml. A new default config has been generated.");
+            getLogger().warning("Old config backed up to old_config_3.yml. A new default config has been generated.");
             config = getConfig();
         }
         // ---------------------------------------------
         MerchantDespawnCheckFrequency = config.getInt("merchant_despawn_check_frequency") * 20L;
         tasks.put("merchant_despawner", Bukkit.getScheduler().runTaskTimer(this, () -> {
-            for (NPC npc : CitizensAPI.getNPCRegistry()) {
+            for (NPC npc: CitizensAPI.getNPCRegistry()) {
                 MetadataStore NPCData = npc.data();
                 String NPCMerchantVariant = NPCData.get("merchant_variant");
                 if (NPCMerchantVariant != null && (NPCMerchantVariant.equals("stray") || NPCMerchantVariant.equals("stray_moving"))) {
@@ -273,17 +329,21 @@ public class Plugin extends JavaPlugin implements Listener {
             String shop = MerchantSection.getString("shop");
             String SkinValue = MerchantSection.getString("skin_value");
             String SkinSignature = MerchantSection.getString("skin_signature");
-            Component DefaultDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("default_dialogue"));
-            Component CorrectItemDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("correct_item_dialogue"));
-            Component IncorrectItemDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("incorrect_item_dialogue"));
-            Component FollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("follow_dialogue"));
-            Component NonShopkeeperUnfollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("non_shopkeeper_unfollow_dialogue"));
-            Component ShopkeeperUnfollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("shopkeeper_unfollow_dialogue"));
             String RawSpawnText = MerchantSection.getString("spawn_text");
             Component SpawnText = null;
             if (RawSpawnText != null) {
                 SpawnText = MiniMessageInstance.deserialize(RawSpawnText);
             }
+            Component InteractionDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("interaction_dialogue"));
+            Component CorrectItemDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("correct_item_dialogue"));
+            Component IncorrectItemDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("incorrect_item_dialogue"));
+            Component FollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("follow_dialogue"));
+            Component NonShopkeeperUnfollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("non_shopkeeper_unfollow_dialogue"));
+            Component ShopkeeperUnfollowDialogue = MiniMessageInstance.deserialize(MerchantSection.getString("shopkeeper_unfollow_dialogue"));
+            int LostDistance = MerchantSection.getInt("lost_distance");
+            Component StuckDialogue = MerchantSection.getString("stuck_dialogue") != null ? MiniMessageInstance.deserialize(MerchantSection.getString("stuck_dialogue")) : null;
+            Component NonShopkeeperLostDialogue = MerchantSection.getString("non_shopkeeper_lost_dialogue") != null ? MiniMessageInstance.deserialize(MerchantSection.getString("non_shopkeeper_lost_dialogue")) : null;
+            Component ShopkeeperLostDialogue = MerchantSection.getString("shopkeeper_lost_dialogue") != null ? MiniMessageInstance.deserialize(MerchantSection.getString("shopkeeper_lost_dialogue")) : null;
             boolean glow = MerchantSection.getBoolean("glow");
             int SpawnRadius = MerchantSection.getInt("spawn_radius");
             int DespawnTime = MerchantSection.getInt("despawn_time");
@@ -339,7 +399,7 @@ public class Plugin extends JavaPlugin implements Listener {
                 SellGUIIconLore.add(MiniMessageInstance.deserialize(line));
             }
             ItemStack SellGUIIcon = CreateItem(SellGUIIconMaterial, SellGUIIconName, SellGUIIconLore, null, null);
-            Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, DefaultDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, SpawnText, glow, SpawnRadius, DespawnTime, ItemId, ItemName, ItemLore, ItemCMD, item, ItemCraftingRecipeGUI, ShopIconMaterial, ShopIconName, ShopIconLore, ShopIcon, SellGUIIconMaterial, SellGUIIconName, SellGUIIconLore, SellGUIIcon);
+            Merchant merchant = new Merchant(id, name, shop, SkinValue, SkinSignature, SpawnText, InteractionDialogue, CorrectItemDialogue, IncorrectItemDialogue, FollowDialogue, NonShopkeeperUnfollowDialogue, ShopkeeperUnfollowDialogue, LostDistance, StuckDialogue, NonShopkeeperLostDialogue, ShopkeeperLostDialogue, glow, SpawnRadius, DespawnTime, ItemId, ItemName, ItemLore, ItemCMD, item, ItemCraftingRecipeGUI, ShopIconMaterial, ShopIconName, ShopIconLore, ShopIcon, SellGUIIconMaterial, SellGUIIconName, SellGUIIconLore, SellGUIIcon);
             merchants.add(merchant);
         }
         if (merchants.isEmpty()) {
@@ -349,7 +409,7 @@ public class Plugin extends JavaPlugin implements Listener {
         }
         ConfigurationSection WorldsSection = config.getConfigurationSection("worlds");
         if (WorldsSection != null) {
-            for (String WorldName : WorldsSection.getKeys(false)) {
+            for (String WorldName: WorldsSection.getKeys(false)) {
                 World world = Bukkit.getWorld(WorldName);
                 if (world == null) {
                     getLogger().severe("World " + WorldName + " does not exist");
@@ -389,28 +449,10 @@ public class Plugin extends JavaPlugin implements Listener {
                             List<Player> WorldPlayers = world.getPlayers();
                             if (!WorldPlayers.isEmpty()) {
                                 Player RandomPlayer = WorldPlayers.get(RandomInstance.nextInt(WorldPlayers.size()));
-                                String RandomMerchantId = WorldConfiguration.RandomMerchant(RandomInstance);
-                                Merchant RandomMerchant = GetMerchantData(RandomMerchantId);
-                                NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, RandomMerchant.name);
-                                MetadataStore NPCData = npc.data();
-                                NPCData.setPersistent("merchant_id", RandomMerchantId);
-                                NPCData.setPersistent("merchant_variant", "stray");
-                                NPCData.setPersistent("merchant_viewers", 0);
-                                NPCData.setPersistent("creation_time", System.currentTimeMillis());
-                                npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
-                                npc.getOrAddTrait(LookClose.class).toggle();
-                                if (RandomMerchant.glow) {
-                                    NPCData.setPersistent(NPC.Metadata.GLOWING, true);
-                                }
-                                npc.setProtected(false);
-                                npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
-                                npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(RandomMerchant.name, RandomMerchant.SkinSignature, RandomMerchant.SkinValue);
-                                int NewX = RandomPlayer.getLocation().blockX() + RandomInstance.nextInt(RandomMerchant.SpawnRadius * 2 + 1) - RandomMerchant.SpawnRadius;
-                                int NewZ = RandomPlayer.getLocation().blockZ() + RandomInstance.nextInt(RandomMerchant.SpawnRadius * 2 + 1) - RandomMerchant.SpawnRadius;
-                                npc.spawn(new Location(world, NewX + 0.5, world.getHighestBlockYAt(NewX, NewZ) + 1, NewZ + 0.5));
-                                if (RandomMerchant.SpawnText != null) {
-                                    RandomPlayer.sendMessage(RandomMerchant.SpawnText);
-                                }
+                                Merchant MerchantData = GetMerchantData(WorldConfiguration.RandomMerchant(RandomInstance));
+                                int NewX = RandomPlayer.getLocation().blockX() + RandomInstance.nextInt(MerchantData.SpawnRadius * 2 + 1) - MerchantData.SpawnRadius;
+                                int NewZ = RandomPlayer.getLocation().blockZ() + RandomInstance.nextInt(MerchantData.SpawnRadius * 2 + 1) - MerchantData.SpawnRadius;
+                                CreateMerchant(MerchantData, new Location(world, NewX + 0.5, world.getHighestBlockYAt(NewX, NewZ) + 1, NewZ + 0.5), RandomPlayer);
                             }
                         }, MerchantSpawnFrequency, MerchantSpawnFrequency));
                     }
@@ -447,10 +489,10 @@ public class Plugin extends JavaPlugin implements Listener {
                 scanner.close();
             }
         }
-        if (VersionInteger > 118) {
+        if (VersionInteger > 119) {
             UpdateStatus = "There is a new version available: v" + VersionString;
         }
-        else if (VersionInteger == 118) {
+        else if (VersionInteger == 119) {
             UpdateStatus = "You are using the latest version";
         }
         else {
@@ -461,24 +503,60 @@ public class Plugin extends JavaPlugin implements Listener {
     public void OnCitizensEnable(CitizensEnableEvent event) {
         for (NPC npc: CitizensAPI.getNPCRegistry()) {
             MetadataStore NPCData = npc.data();
-            String MerchantId = NPCData.get("merchant_id");
-            if (MerchantId != null) {
-                Merchant MerchantData = GetMerchantData(MerchantId);
+            String NPCMerchantId = NPCData.get("merchant_id");
+            if (NPCMerchantId != null) {
+                Merchant MerchantData = GetMerchantData(NPCMerchantId);
                 if (MerchantData != null) {
                     String WorldName = npc.getStoredLocation().getWorld().getName();
                     boolean WorldFound = false;
-                    for (WorldConfiguration WorldConfiguration : worlds) {
+                    for (WorldConfiguration WorldConfiguration: worlds) {
                         if (WorldConfiguration.name.equals(WorldName)) {
                             WorldFound = true;
-                            String MerchantStatus = WorldConfiguration.MerchantQuery(MerchantId);
+                            String MerchantStatus = WorldConfiguration.MerchantQuery(NPCMerchantId);
                             if (MerchantStatus.equals("Enabled")) {
-                                if (NPCData.get("merchant_variant").equals("stray")) {
+                                String NPCMerchantVariant = NPCData.get("merchant_variant");
+                                if (NPCMerchantVariant.equals("stray")) {
                                     NPCData.setPersistent("merchant_viewers", 0);
                                     npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                }
+                                else if (NPCMerchantVariant.endsWith("_moving")) {
+                                    NPCData.setPersistent("merchant_variant", NPCMerchantVariant.replace("_moving", ""));
+                                    npc.getOrAddTrait(FollowTrait.class).follow(null);
+                                    if (NPCMerchantVariant.equals("stray_moving")) {
+                                        NPCData.setPersistent("merchant_viewers", 0);
+                                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                    }
                                 }
                                 npc.setName(MerchantData.name);
                                 npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
                                 npc.spawn(npc.getStoredLocation());
+                                npc.getNavigator().getDefaultParameters().stuckAction((StuckNPC, navigator) -> {
+                                    MetadataStore StuckNPCData = StuckNPC.data();
+                                    String StuckNPCMerchantVariant = StuckNPCData.get("merchant_variant");
+                                    if (StuckNPCMerchantVariant.endsWith("_moving")) {
+                                        Merchant StuckMerchantData = GetMerchantData(StuckNPCData.get("merchant_id"));
+                                        Player FollowingPlayer = (Player) StuckNPC.getOrAddTrait(FollowTrait.class).getFollowing();
+                                        Location StuckNPCLocation = StuckNPC.getStoredLocation();
+                                        Location FollowingPlayerLocation = FollowingPlayer.getLocation();
+                                        if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld()) && StuckNPCLocation.distance(FollowingPlayerLocation) <= StuckMerchantData.LostDistance) {
+                                            FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                                        }
+                                        else {
+                                            StuckNPCData.setPersistent("merchant_variant", StuckNPCMerchantVariant.replace("_moving", ""));
+                                            StuckNPC.getOrAddTrait(FollowTrait.class).follow(null);
+                                            if (StuckNPCMerchantVariant.equals("stray_moving")) {
+                                                StuckNPCData.setPersistent("merchant_viewers", 0);
+                                                StuckNPC.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                                                FollowingPlayer.sendMessage(StuckMerchantData.NonShopkeeperLostDialogue);
+                                            }
+                                            else {
+                                                FollowingPlayer.sendMessage(StuckMerchantData.ShopkeeperLostDialogue);
+                                            }
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                }).stationaryTicks(60);
                             }
                             else if (MerchantStatus.equals("Disabled")) {
                                 npc.despawn();
@@ -499,7 +577,7 @@ public class Plugin extends JavaPlugin implements Listener {
             }
         }
         getLogger().info("=============================================");
-        getLogger().info("Wandering Merchants v1.1.8");
+        getLogger().info("Wandering Merchants v1.1.9");
         getLogger().info("Made by MahinBro001238");
         getLogger().info("Licensed under the Apache License 2.0");
         getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
@@ -511,9 +589,9 @@ public class Plugin extends JavaPlugin implements Listener {
     public void OnItemCraft(CraftItemEvent event) {
         ItemStack result = event.getRecipe().getResult();
         ItemMeta ItemMeta = result.getItemMeta();
-        Player player = (Player) event.getWhoClicked();
         if (ItemMeta != null && ItemMeta.getPersistentDataContainer().has(MerchantItemKey)) {
             if (!AllowItemCraftingWithoutMerchant) {
+                Player player = (Player) event.getWhoClicked();
                 String WorldName = player.getWorld().getName();
                 boolean WorldFound = false;
                 for (WorldConfiguration WorldConfiguration: worlds) {
@@ -627,7 +705,7 @@ public class Plugin extends JavaPlugin implements Listener {
                         int slot = event.getRawSlot();
                         if (slot == 20) {
                             if (NPCMerchantVariant.equals("stray") || NPCMerchantVariant.equals("stray_moving")) {
-                                player.sendMessage(MerchantData.DefaultDialogue);
+                                player.sendMessage(MerchantData.InteractionDialogue);
                                 player.closeInventory();
                             }
                             else {
@@ -730,6 +808,26 @@ public class Plugin extends JavaPlugin implements Listener {
         }
     }
     @EventHandler
+    public void OnPlayerQuit(PlayerQuitEvent event) {
+        String PlayerName = event.getPlayer().getName();
+        for (NPC npc: CitizensAPI.getNPCRegistry()) {
+            MetadataStore NPCData = npc.data();
+            if (NPCData.has("merchant_id")) {
+                Entity following = npc.getOrAddTrait(FollowTrait.class).getFollowing();
+                if (following != null && following.getName().equals(PlayerName)) {
+                    String NPCMerchantVariant = NPCData.get("merchant_variant");
+                    NPCData.setPersistent("merchant_variant", NPCMerchantVariant.replace("_moving", ""));
+                    npc.getOrAddTrait(FollowTrait.class).follow(null);
+                    if (NPCMerchantVariant.equals("stray_moving")) {
+                        NPCData.setPersistent("merchant_viewers", 0);
+                        npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
     public void OnNPCDeath(PlayerDeathEvent event) {
         NPC npc = CitizensAPI.getNPCRegistry().getNPC(event.getEntity());
         if (npc != null) {
@@ -750,7 +848,7 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @Override
     public void onDisable() {
-        getLogger().info("Wandering Merchants v1.1.8 has been disabled");
+        getLogger().info("Wandering Merchants v1.1.9 has been disabled");
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -769,29 +867,12 @@ public class Plugin extends JavaPlugin implements Listener {
                                     player = CommandExecutor;
                                 }
                                 if (player != null) {
-                                    NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, MerchantData.name);
-                                    MetadataStore NPCData = npc.data();
-                                    NPCData.setPersistent("merchant_id", MerchantData.id);
-                                    NPCData.setPersistent("merchant_variant", "stray");
-                                    NPCData.setPersistent("merchant_viewers", 0);
-                                    NPCData.setPersistent("creation_time", System.currentTimeMillis());
-                                    npc.getOrAddTrait(Waypoints.class).setWaypointProvider("wander");
-                                    npc.getOrAddTrait(LookClose.class).toggle();
-                                    if (MerchantData.glow) {
-                                        NPCData.setPersistent(NPC.Metadata.GLOWING, true);
-                                    }
-                                    npc.setProtected(false);
-                                    npc.getOrAddTrait(TargetableTrait.class).setTargetable(true);
-                                    npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(MerchantData.name, MerchantData.SkinSignature, MerchantData.SkinValue);
-                                    npc.spawn(player.getLocation());
-                                    if (MerchantData.SpawnText != null) {
-                                        player.sendMessage(MerchantData.SpawnText);
-                                    }
+                                    CreateMerchant(MerchantData, player.getLocation(), player);
                                     if (args.length == 3) {
                                         CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + " at " + player.getName() + "'s location", NamedTextColor.GOLD));
                                     }
                                     else {
-                                        CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id + "", NamedTextColor.GOLD));
+                                        CommandExecutor.sendMessage(Component.text("Spawned " + MerchantData.id, NamedTextColor.GOLD));
                                     }
                                 }
                                 else {
@@ -906,7 +987,7 @@ public class Plugin extends JavaPlugin implements Listener {
                                             CommandExecutor.sendMessage(Component.empty().append(Component.text("Name: ", NamedTextColor.GOLD)).append(Component.text(args[2])));
                                             CommandExecutor.sendMessage(Component.empty().append(Component.text("Merchant Spawn Frequency: ", NamedTextColor.GOLD)).append(Component.text(Integer.toString(WorldConfiguration.MerchantSpawnFrequency) + " seconds")));
                                             CommandExecutor.sendMessage(Component.text("--- Merchant Data ---", NamedTextColor.GOLD));
-                                            for (MerchantConfiguration MerchantConfiguration : WorldConfiguration.UsedMerchants) {
+                                            for (MerchantConfiguration MerchantConfiguration: WorldConfiguration.UsedMerchants) {
                                                 CommandExecutor.sendMessage(Component.empty());
                                                 CommandExecutor.sendMessage(Component.empty().append(Component.text("ID: ", NamedTextColor.GOLD)).append(Component.text(MerchantConfiguration.id)));
                                                 CommandExecutor.sendMessage(Component.empty().append(Component.text("Rarity: ", NamedTextColor.GOLD)).append(Component.text(Integer.toString(MerchantConfiguration.rarity))));
@@ -947,17 +1028,21 @@ public class Plugin extends JavaPlugin implements Listener {
                                             SkinSignature = SkinSignature.substring(0, 20) + "...";
                                         }
                                         CommandExecutor.sendMessage(Component.empty().append(Component.text("Skin Signature: ", NamedTextColor.GOLD)).append(Component.text(SkinSignature)));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Default Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.DefaultDialogue));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Correct Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.CorrectItemDialogue));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Incorrect Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.IncorrectItemDialogue));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Follow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.FollowDialogue));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Non Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.NonShopkeeperUnfollowDialogue));
-                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.ShopkeeperUnfollowDialogue));
                                         Component SpawnText = MerchantData.SpawnText;
                                         if (SpawnText == null) {
                                             SpawnText = Component.text("null");
                                         }
                                         CommandExecutor.sendMessage(Component.empty().append(Component.text("Spawn Text: ", NamedTextColor.GOLD)).append(SpawnText));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Interaction Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.InteractionDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Correct Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.CorrectItemDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Incorrect Item Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.IncorrectItemDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Follow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.FollowDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Non Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.NonShopkeeperUnfollowDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shopkeeper Unfollow Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.ShopkeeperUnfollowDialogue));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Lost Distance: ", NamedTextColor.GOLD)).append(Component.text(MerchantData.LostDistance)));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Stuck Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.StuckDialogue != null ? MerchantData.StuckDialogue : Component.text("null")));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Non Shopkeeper Lost Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.NonShopkeeperLostDialogue != null ? MerchantData.NonShopkeeperLostDialogue : Component.text("null")));
+                                        CommandExecutor.sendMessage(Component.empty().append(Component.text("Shopkeeper Lost Dialogue: ", NamedTextColor.GOLD)).append(MerchantData.ShopkeeperLostDialogue != null ? MerchantData.ShopkeeperLostDialogue : Component.text("null")));
                                         CommandExecutor.sendMessage(Component.empty().append(Component.text("Glow: ", NamedTextColor.GOLD)).append(Component.text(Boolean.toString(MerchantData.glow))));
                                         CommandExecutor.sendMessage(Component.empty().append(Component.text("Spawn Radius: ", NamedTextColor.GOLD)).append(Component.text(Integer.toString(MerchantData.SpawnRadius) + " blocks")));
                                         CommandExecutor.sendMessage(Component.empty().append(Component.text("Despawn Time: ", NamedTextColor.GOLD)).append(Component.text(Integer.toString(MerchantData.DespawnTime) + " seconds")));
