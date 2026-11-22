@@ -69,6 +69,8 @@ public class Plugin extends JavaPlugin implements Listener {
     private List<Merchant> merchants = new ArrayList<>();
     private String UpdateStatus;
     private Random RandomInstance = new Random();
+    private List<String> MerchantIds = new ArrayList<>();
+    private List<String> WorldNames = new ArrayList<>();
     private static class MerchantConfiguration {
         public String id;
         public int rarity;
@@ -240,8 +242,14 @@ public class Plugin extends JavaPlugin implements Listener {
                 Player FollowingPlayer = (Player) StuckNPC.getOrAddTrait(FollowTrait.class).getFollowing();
                 Location StuckNPCLocation = StuckNPC.getStoredLocation();
                 Location FollowingPlayerLocation = FollowingPlayer.getLocation();
-                if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld()) && StuckNPCLocation.distance(FollowingPlayerLocation) <= StuckMerchantData.LostDistance) {
-                    FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                double distance = -1;
+                if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld())) {
+                    distance = StuckNPCLocation.distance(FollowingPlayerLocation);
+                }
+                if (distance != -1 && distance < StuckMerchantData.LostDistance) {
+                    if (distance > 2) {
+                        FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                    }
                 }
                 else {
                     StuckNPCData.setPersistent("merchant_variant", StuckNPCMerchantVariant.replace("_moving", ""));
@@ -279,10 +287,10 @@ public class Plugin extends JavaPlugin implements Listener {
         // ---------------------------------------------
         // LEGACY CODE
         // ---------------------------------------------
-        if (config.getDouble("config_version") < 3.3)
+        if (config.getDouble("config_version") < 3.4)
         {
             File OldConfigFile = new File(getDataFolder(), "config.yml");
-            File BackupFile = new File(getDataFolder(), "old_config_3.yml");
+            File BackupFile = new File(getDataFolder(), "old_config_4.yml");
             try
             {
                 String OldContent = new String(java.nio.file.Files.readAllBytes(OldConfigFile.toPath()));
@@ -296,7 +304,7 @@ public class Plugin extends JavaPlugin implements Listener {
             }
             saveDefaultConfig();
             reloadConfig();
-            getLogger().warning("Old config backed up to old_config_3.yml. A new default config has been generated.");
+            getLogger().warning("Old config backed up to old_config_4.yml. A new default config has been generated.");
             config = getConfig();
         }
         // ---------------------------------------------
@@ -324,6 +332,7 @@ public class Plugin extends JavaPlugin implements Listener {
         ConfigurationSection MerchantsSection = config.getConfigurationSection("merchants");
         HashMap<String, String> ItemIds = new HashMap<>();
         for (String id: MerchantsSection.getKeys(false)) {
+            MerchantIds.add(id);
             ConfigurationSection MerchantSection = MerchantsSection.getConfigurationSection(id);
             String name = MerchantSection.getString("name");
             String shop = MerchantSection.getString("shop");
@@ -416,6 +425,7 @@ public class Plugin extends JavaPlugin implements Listener {
                     Bukkit.getPluginManager().disablePlugin(this);
                     return;
                 }
+                WorldNames.add(WorldName);
                 ConfigurationSection WorldSection = WorldsSection.getConfigurationSection(WorldName);
                 ConfigurationSection WorldMerchantsSection = WorldSection.getConfigurationSection("merchants");
                 List<MerchantConfiguration> UsedMerchants = new ArrayList<>();
@@ -489,10 +499,10 @@ public class Plugin extends JavaPlugin implements Listener {
                 scanner.close();
             }
         }
-        if (VersionInteger > 119) {
+        if (VersionInteger > 120) {
             UpdateStatus = "There is a new version available: v" + VersionString;
         }
-        else if (VersionInteger == 119) {
+        else if (VersionInteger == 120) {
             UpdateStatus = "You are using the latest version";
         }
         else {
@@ -538,8 +548,14 @@ public class Plugin extends JavaPlugin implements Listener {
                                         Player FollowingPlayer = (Player) StuckNPC.getOrAddTrait(FollowTrait.class).getFollowing();
                                         Location StuckNPCLocation = StuckNPC.getStoredLocation();
                                         Location FollowingPlayerLocation = FollowingPlayer.getLocation();
-                                        if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld()) && StuckNPCLocation.distance(FollowingPlayerLocation) <= StuckMerchantData.LostDistance) {
-                                            FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                                        double distance = -1;
+                                        if (StuckNPCLocation.getWorld().equals(FollowingPlayerLocation.getWorld())) {
+                                            distance = StuckNPCLocation.distance(FollowingPlayerLocation);
+                                        }
+                                        if (distance != -1 && distance < StuckMerchantData.LostDistance) {
+                                            if (distance > 2) {
+                                                FollowingPlayer.sendMessage(StuckMerchantData.StuckDialogue);
+                                            }
                                         }
                                         else {
                                             StuckNPCData.setPersistent("merchant_variant", StuckNPCMerchantVariant.replace("_moving", ""));
@@ -577,7 +593,7 @@ public class Plugin extends JavaPlugin implements Listener {
             }
         }
         getLogger().info("=============================================");
-        getLogger().info("Wandering Merchants v1.1.9");
+        getLogger().info("Wandering Merchants v1.2.0");
         getLogger().info("Made by MahinBro001238");
         getLogger().info("Licensed under the Apache License 2.0");
         getLogger().info("For support: https://discord.gg/8yrbGUCFFD");
@@ -629,62 +645,64 @@ public class Plugin extends JavaPlugin implements Listener {
         MetadataStore NPCData = npc.data();
         String NPCMerchantId = NPCData.get("merchant_id");
         if (NPCMerchantId != null) {
-            String NPCMerchantVariant = NPCData.get("merchant_variant");
-            String NPCName = npc.getName();
-            Player player = event.getClicker();
-            String PlayerName = player.getName();
-            Merchant MerchantData = GetMerchantData(NPCMerchantId);
-            Inventory GUI = Bukkit.createInventory(new InventoryOwner(npc.getId() + " " + NPCMerchantVariant), 45, Component.text(NPCName));
-            ItemStack TalkToMerchant = CreateItem(Material.PAPER, Component.text("Talk to " + NPCName), null, null, null);
-            ItemStack MerchantItemInteraction = CreateItem(Material.ENCHANTED_BOOK, MerchantData.ItemName, List.of(Component.text("Left click to give ").append(MerchantData.ItemName).append(Component.text(" to " + NPCName)), Component.text("Right click to view ").append(MerchantData.ItemName).append(Component.text(" recipe"))), MerchantData.ItemCMD, null);
-            ItemStack ShopIcon = MerchantData.ShopIcon;
-            ItemStack SellGUIIcon = MerchantData.SellGUIIcon;
-            ItemStack follow = CreateItem(Material.LIME_CONCRETE, Component.text("Follow"), List.of(Component.text("Make " + NPCName + " follow you")), null, null);
-            ItemStack unfollow = CreateItem(Material.RED_CONCRETE, Component.text("Unfollow"), List.of(Component.text("Make " + NPCName + " stop following you")), null, null);
-            String FollowingName;
-            Entity following = npc.getOrAddTrait(FollowTrait.class).getFollowing();
-            if (following != null) {
-                FollowingName = following.getName();
-            }
-            else {
-                FollowingName = "null";
-            }
-            ItemStack AlreadyFollowing = CreateItem(Material.WHITE_CONCRETE, Component.text("Following " + FollowingName), List.of(Component.text(NPCName + " is currently following " + FollowingName)), null, null);
-            if (NPCMerchantVariant.equals("stray")) {
-                npc.getOrAddTrait(Waypoints.class).setWaypointProvider("linear");
-                NPCData.setPersistent(NPC.Metadata.GLOWING, false);
-                NPCData.setPersistent("merchant_viewers", (int) NPCData.get("merchant_viewers") + 1);
-                GUI.setItem(20, TalkToMerchant);
-                GUI.setItem(22, MerchantItemInteraction);
-                GUI.setItem(24, follow);
-            }
-            else if (NPCMerchantVariant.equals("stray_moving")) {
-                GUI.setItem(20, TalkToMerchant);
-                GUI.setItem(22, MerchantItemInteraction);
-                if (PlayerName.equals(FollowingName)) {
-                    GUI.setItem(24, unfollow);
+            if (npc.isSpawned()) {
+                String NPCMerchantVariant = NPCData.get("merchant_variant");
+                String NPCName = npc.getName();
+                Player player = event.getClicker();
+                String PlayerName = player.getName();
+                Merchant MerchantData = GetMerchantData(NPCMerchantId);
+                Inventory GUI = Bukkit.createInventory(new InventoryOwner(npc.getId() + " " + NPCMerchantVariant), 45, Component.text(NPCName));
+                ItemStack TalkToMerchant = CreateItem(Material.PAPER, Component.text("Talk to " + NPCName), null, null, null);
+                ItemStack MerchantItemInteraction = CreateItem(Material.ENCHANTED_BOOK, MerchantData.ItemName, List.of(Component.text("Left click to give ").append(MerchantData.ItemName).append(Component.text(" to " + NPCName)), Component.text("Right click to view ").append(MerchantData.ItemName).append(Component.text(" recipe"))), MerchantData.ItemCMD, null);
+                ItemStack ShopIcon = MerchantData.ShopIcon;
+                ItemStack SellGUIIcon = MerchantData.SellGUIIcon;
+                ItemStack follow = CreateItem(Material.LIME_CONCRETE, Component.text("Follow"), List.of(Component.text("Make " + NPCName + " follow you")), null, null);
+                ItemStack unfollow = CreateItem(Material.RED_CONCRETE, Component.text("Unfollow"), List.of(Component.text("Make " + NPCName + " stop following you")), null, null);
+                String FollowingName;
+                Entity following = npc.getOrAddTrait(FollowTrait.class).getFollowing();
+                if (following != null) {
+                    FollowingName = following.getName();
                 }
                 else {
-                    GUI.setItem(24, AlreadyFollowing);
+                    FollowingName = "null";
                 }
-            }
-            else if (NPCMerchantVariant.equals("shopkeeper")) {
-                GUI.setItem(20, ShopIcon);
-                GUI.setItem(22, SellGUIIcon);
-                GUI.setItem(24, follow);
-            }
-            else {
-                GUI.setItem(20, ShopIcon);
-                GUI.setItem(22, SellGUIIcon);
-                if (PlayerName.equals(FollowingName)) {
-                    GUI.setItem(24, unfollow);
+                ItemStack AlreadyFollowing = CreateItem(Material.WHITE_CONCRETE, Component.text("Following " + FollowingName), List.of(Component.text(NPCName + " is currently following " + FollowingName)), null, null);
+                if (NPCMerchantVariant.equals("stray")) {
+                    npc.getOrAddTrait(Waypoints.class).setWaypointProvider("linear");
+                    NPCData.setPersistent(NPC.Metadata.GLOWING, false);
+                    NPCData.setPersistent("merchant_viewers", (int) NPCData.get("merchant_viewers") + 1);
+                    GUI.setItem(20, TalkToMerchant);
+                    GUI.setItem(22, MerchantItemInteraction);
+                    GUI.setItem(24, follow);
+                }
+                else if (NPCMerchantVariant.equals("stray_moving")) {
+                    GUI.setItem(20, TalkToMerchant);
+                    GUI.setItem(22, MerchantItemInteraction);
+                    if (PlayerName.equals(FollowingName)) {
+                        GUI.setItem(24, unfollow);
+                    }
+                    else {
+                        GUI.setItem(24, AlreadyFollowing);
+                    }
+                }
+                else if (NPCMerchantVariant.equals("shopkeeper")) {
+                    GUI.setItem(20, ShopIcon);
+                    GUI.setItem(22, SellGUIIcon);
+                    GUI.setItem(24, follow);
                 }
                 else {
-                    GUI.setItem(24, AlreadyFollowing);
+                    GUI.setItem(20, ShopIcon);
+                    GUI.setItem(22, SellGUIIcon);
+                    if (PlayerName.equals(FollowingName)) {
+                        GUI.setItem(24, unfollow);
+                    }
+                    else {
+                        GUI.setItem(24, AlreadyFollowing);
+                    }
                 }
+                GUI.setItem(36, CreateItem(Material.REDSTONE_BLOCK, Component.text("Health: " + String.format("%.1f", ((LivingEntity) npc.getEntity()).getHealth()) + "/20.0"), null, null, null));
+                player.openInventory(GUI);
             }
-            GUI.setItem(36, CreateItem(Material.REDSTONE_BLOCK, Component.text("Health: " + String.format("%.1f", ((LivingEntity) npc.getEntity()).getHealth()) + "/20.0"), null, null, null));
-            player.openInventory(GUI);
         }
     }
     @EventHandler
@@ -848,7 +866,7 @@ public class Plugin extends JavaPlugin implements Listener {
     }
     @Override
     public void onDisable() {
-        getLogger().info("Wandering Merchants v1.1.9 has been disabled");
+        getLogger().info("Wandering Merchants v1.2.0 has been disabled");
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -967,7 +985,7 @@ public class Plugin extends JavaPlugin implements Listener {
                                 if (args.length == 2) {
                                     CommandExecutor.sendMessage(Component.text("---------- General Config ----------", NamedTextColor.GOLD));
                                     CommandExecutor.sendMessage(Component.empty().append(Component.text("Merchant Despawn Check Frequency: ", NamedTextColor.GOLD)).append(Component.text(Long.toString(MerchantDespawnCheckFrequency) + " seconds")));
-                                    CommandExecutor.sendMessage(Component.empty().append(Component.text("Sell GUI Permission Revoke Delay: ", NamedTextColor.GOLD)).append(Component.text(Long.toString(SellGUIPermissionRevokeDelay) + " tick")));
+                                    CommandExecutor.sendMessage(Component.empty().append(Component.text("Sell GUI Permission Revoke Delay: ", NamedTextColor.GOLD)).append(Component.text(Long.toString(SellGUIPermissionRevokeDelay) + " ticks")));
                                     CommandExecutor.sendMessage(Component.empty().append(Component.text("Allow Item Crafting Without Merchant: ", NamedTextColor.GOLD)).append(Component.text(Boolean.toString(AllowItemCraftingWithoutMerchant))));
                                     CommandExecutor.sendMessage(Component.empty().append(Component.text("Suppress Merchant Death Message: ", NamedTextColor.GOLD)).append(Component.text(Boolean.toString(SuppressMerchantDeathMessage))));
                                     CommandExecutor.sendMessage(Component.empty().append(Component.text("No Permission Message: ", NamedTextColor.GOLD)).append(NoPermissionMessage));
@@ -1315,5 +1333,62 @@ public class Plugin extends JavaPlugin implements Listener {
             sender.sendMessage("This command can only be executed by a player");
         }
         return true;
+    }
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1) {
+            return List.of("spawn", "give", "recipe", "get", "set");
+        }
+        else if (args.length == 2) {
+            if (args[0].equals("spawn") || args[0].equals("give") || args[0].equals("recipe")) {
+                return MerchantIds;
+            }
+            else if (args[0].equals("get")) {
+                return List.of("general_config", "worlds_config", "merchants_config", "npc_data", "item_data");
+            }
+            else if (args[0].equals("set")) {
+                return List.of("npc_data", "item_data");
+            }
+        }
+        else if (args.length == 3) {
+            if (args[0].equals("spawn") || args[0].equals("give") || args[0].equals("recipe")) {
+                return null;
+            }
+            else if (args[0].equals("get") && args[1].equals("worlds_config")) {
+                return WorldNames;
+            }
+            else if (args[0].equals("get") && args[1].equals("merchants_config")) {
+                return MerchantIds;
+            }
+            else if (args[0].equals("set") && args[1].equals("item_data")) {
+                return List.of("id", "cmd");
+            }
+        }
+        else if (args.length == 4) {
+            if (args[0].equals("set") && args[1].equals("npc_data")) {
+                return List.of("merchant_id", "merchant_variant", "merchant_viewers", "creation_time", "following");
+            }
+            else if (args[0].equals("set") && args[1].equals("item_data") && (args[2].equals("id") | args[2].equals("cmd"))) {
+                return List.of("NULL");
+            }
+        }
+        else if (args.length == 5) {
+            if (args[0].equals("set") && args[1].equals("npc_data") && args[3].equals("merchant_id")) {
+                return List.of("NULL");
+            }
+            else if (args[0].equals("set") && args[1].equals("npc_data") && args[3].equals("merchant_variant")) {
+                return List.of("NULL", "stray", "stray_moving", "shopkeeper", "shopkeeper_moving");
+            }
+            else if (args[0].equals("set") && args[1].equals("npc_data") && (args[3].equals("merchant_viewers") || args[3].equals("creation_time"))) {
+                return List.of("NULL");
+            }
+            else if (args[0].equals("set") && args[1].equals("npc_data") && args[3].equals("following")) {
+                List<String> options = new ArrayList<>();
+                options.add("NULL");
+                Bukkit.getOnlinePlayers().forEach(player -> options.add(player.getName()));
+                return options;
+            }
+        }
+        return List.of();
     }
 }

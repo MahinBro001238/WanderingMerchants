@@ -1,5 +1,5 @@
 # =============================================
-# Wandering Merchants v1.1.9
+# Wandering Merchants v1.2.0
 # Made by MahinBro001238
 # Licensed under the Apache License 2.0
 # For support or questions, join my discord server:
@@ -7,7 +7,7 @@
 # =============================================
 
 #DO NOT CHANGE THIS VALUE
-config_version: 3.3
+config_version: 3.4
 
 # How often the plugin checks for merchants that should despawn, in seconds
 # Warning: If this value is too high, merchants may stay longer than the specified despawn time
@@ -67,7 +67,7 @@ messages:
 #   - "say %merchant_name% has appeared in %world%!"
 #   - "broadcast A merchant is here!"
 #
-# EVENTS SECTION IS UNDER DEVELOPMENT AND NOT USABLE IN VERSION 1.1.9
+# EVENTS SECTION IS UNDER DEVELOPMENT AND NOT USABLE IN VERSION 1.2.0
 # I added this section even though its not being used so that I don't have to migrate the config again
 # To learn about when this section becomes usable, make sure to read the release notes of future releases
 events:
@@ -114,7 +114,7 @@ worlds:
   world:
 
     # How frequently should merchants spawn in this world
-    # By default, a merchant can spawn once every hour
+    # By default, a merchant can spawn once every 10 minutes
     merchant_spawn_frequency: 600
 
     # List of all the merchants that can spawn in this world
@@ -255,7 +255,6 @@ merchants:
     # The message the merchant says when the player brings the incorrect item
     incorrect_item_dialogue: "Sylphie: No, this is not what I requested. Bring me the correct item, please."
 
-    # The message the merchants says to the player when its already in another interaction
     # The message the merchant says to the player when it starts following the player
     follow_dialogue: "Sylphie: Very well, seeker. Lead on; the world is full of secrets waiting to be uncovered."
 
@@ -280,7 +279,7 @@ merchants:
     shopkeeper_lost_dialogue: "Sylphie: Hey, where did you go? Come find me, I'll wait right here!"
 
 
-    # Whether the merchant should unitially glow when it spawns
+    # Whether the merchant should initially glow when it spawns
     glow: true
 
     # The radius (in blocks) around a random player within which the merchant can spawn
